@@ -1,0 +1,1742 @@
+{
+  "source": "Tiny RPG Character Asset Pack v1.03b -Full 20 Characters.zip",
+  "frame_size": [
+    100,
+    100
+  ],
+  "note": "Each frame PNG is 100x100 transparent. Use file order frame_001, frame_002... for animation.",
+  "assets": {
+    "characters": {
+      "archer": {
+        "attack01": {
+          "frames": 9,
+          "files": [
+            "characters/archer/attack01/archer_attack01_frame_001.png",
+            "characters/archer/attack01/archer_attack01_frame_002.png",
+            "characters/archer/attack01/archer_attack01_frame_003.png",
+            "characters/archer/attack01/archer_attack01_frame_004.png",
+            "characters/archer/attack01/archer_attack01_frame_005.png",
+            "characters/archer/attack01/archer_attack01_frame_006.png",
+            "characters/archer/attack01/archer_attack01_frame_007.png",
+            "characters/archer/attack01/archer_attack01_frame_008.png",
+            "characters/archer/attack01/archer_attack01_frame_009.png"
+          ]
+        },
+        "attack02": {
+          "frames": 12,
+          "files": [
+            "characters/archer/attack02/archer_attack02_frame_001.png",
+            "characters/archer/attack02/archer_attack02_frame_002.png",
+            "characters/archer/attack02/archer_attack02_frame_003.png",
+            "characters/archer/attack02/archer_attack02_frame_004.png",
+            "characters/archer/attack02/archer_attack02_frame_005.png",
+            "characters/archer/attack02/archer_attack02_frame_006.png",
+            "characters/archer/attack02/archer_attack02_frame_007.png",
+            "characters/archer/attack02/archer_attack02_frame_008.png",
+            "characters/archer/attack02/archer_attack02_frame_009.png",
+            "characters/archer/attack02/archer_attack02_frame_010.png",
+            "characters/archer/attack02/archer_attack02_frame_011.png",
+            "characters/archer/attack02/archer_attack02_frame_012.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/archer/die/archer_die_frame_001.png",
+            "characters/archer/die/archer_die_frame_002.png",
+            "characters/archer/die/archer_die_frame_003.png",
+            "characters/archer/die/archer_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/archer/hit/archer_hit_frame_001.png",
+            "characters/archer/hit/archer_hit_frame_002.png",
+            "characters/archer/hit/archer_hit_frame_003.png",
+            "characters/archer/hit/archer_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/archer/idle/archer_idle_frame_001.png",
+            "characters/archer/idle/archer_idle_frame_002.png",
+            "characters/archer/idle/archer_idle_frame_003.png",
+            "characters/archer/idle/archer_idle_frame_004.png",
+            "characters/archer/idle/archer_idle_frame_005.png",
+            "characters/archer/idle/archer_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/archer/walk/archer_walk_frame_001.png",
+            "characters/archer/walk/archer_walk_frame_002.png",
+            "characters/archer/walk/archer_walk_frame_003.png",
+            "characters/archer/walk/archer_walk_frame_004.png",
+            "characters/archer/walk/archer_walk_frame_005.png",
+            "characters/archer/walk/archer_walk_frame_006.png",
+            "characters/archer/walk/archer_walk_frame_007.png",
+            "characters/archer/walk/archer_walk_frame_008.png"
+          ]
+        }
+      },
+      "armored_axeman": {
+        "attack01": {
+          "frames": 9,
+          "files": [
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_001.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_002.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_003.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_004.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_005.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_006.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_007.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_008.png",
+            "characters/armored_axeman/attack01/armored_axeman_attack01_frame_009.png"
+          ]
+        },
+        "attack02": {
+          "frames": 9,
+          "files": [
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_001.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_002.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_003.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_004.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_005.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_006.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_007.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_008.png",
+            "characters/armored_axeman/attack02/armored_axeman_attack02_frame_009.png"
+          ]
+        },
+        "attack03": {
+          "frames": 12,
+          "files": [
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_001.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_002.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_003.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_004.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_005.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_006.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_007.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_008.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_009.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_010.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_011.png",
+            "characters/armored_axeman/attack03/armored_axeman_attack03_frame_012.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/armored_axeman/die/armored_axeman_die_frame_001.png",
+            "characters/armored_axeman/die/armored_axeman_die_frame_002.png",
+            "characters/armored_axeman/die/armored_axeman_die_frame_003.png",
+            "characters/armored_axeman/die/armored_axeman_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/armored_axeman/hit/armored_axeman_hit_frame_001.png",
+            "characters/armored_axeman/hit/armored_axeman_hit_frame_002.png",
+            "characters/armored_axeman/hit/armored_axeman_hit_frame_003.png",
+            "characters/armored_axeman/hit/armored_axeman_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/armored_axeman/idle/armored_axeman_idle_frame_001.png",
+            "characters/armored_axeman/idle/armored_axeman_idle_frame_002.png",
+            "characters/armored_axeman/idle/armored_axeman_idle_frame_003.png",
+            "characters/armored_axeman/idle/armored_axeman_idle_frame_004.png",
+            "characters/armored_axeman/idle/armored_axeman_idle_frame_005.png",
+            "characters/armored_axeman/idle/armored_axeman_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_001.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_002.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_003.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_004.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_005.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_006.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_007.png",
+            "characters/armored_axeman/walk/armored_axeman_walk_frame_008.png"
+          ]
+        }
+      },
+      "knight": {
+        "attack01": {
+          "frames": 7,
+          "files": [
+            "characters/knight/attack01/knight_attack01_frame_001.png",
+            "characters/knight/attack01/knight_attack01_frame_002.png",
+            "characters/knight/attack01/knight_attack01_frame_003.png",
+            "characters/knight/attack01/knight_attack01_frame_004.png",
+            "characters/knight/attack01/knight_attack01_frame_005.png",
+            "characters/knight/attack01/knight_attack01_frame_006.png",
+            "characters/knight/attack01/knight_attack01_frame_007.png"
+          ]
+        },
+        "attack02": {
+          "frames": 10,
+          "files": [
+            "characters/knight/attack02/knight_attack02_frame_001.png",
+            "characters/knight/attack02/knight_attack02_frame_002.png",
+            "characters/knight/attack02/knight_attack02_frame_003.png",
+            "characters/knight/attack02/knight_attack02_frame_004.png",
+            "characters/knight/attack02/knight_attack02_frame_005.png",
+            "characters/knight/attack02/knight_attack02_frame_006.png",
+            "characters/knight/attack02/knight_attack02_frame_007.png",
+            "characters/knight/attack02/knight_attack02_frame_008.png",
+            "characters/knight/attack02/knight_attack02_frame_009.png",
+            "characters/knight/attack02/knight_attack02_frame_010.png"
+          ]
+        },
+        "attack03": {
+          "frames": 11,
+          "files": [
+            "characters/knight/attack03/knight_attack03_frame_001.png",
+            "characters/knight/attack03/knight_attack03_frame_002.png",
+            "characters/knight/attack03/knight_attack03_frame_003.png",
+            "characters/knight/attack03/knight_attack03_frame_004.png",
+            "characters/knight/attack03/knight_attack03_frame_005.png",
+            "characters/knight/attack03/knight_attack03_frame_006.png",
+            "characters/knight/attack03/knight_attack03_frame_007.png",
+            "characters/knight/attack03/knight_attack03_frame_008.png",
+            "characters/knight/attack03/knight_attack03_frame_009.png",
+            "characters/knight/attack03/knight_attack03_frame_010.png",
+            "characters/knight/attack03/knight_attack03_frame_011.png"
+          ]
+        },
+        "block": {
+          "frames": 4,
+          "files": [
+            "characters/knight/block/knight_block_frame_001.png",
+            "characters/knight/block/knight_block_frame_002.png",
+            "characters/knight/block/knight_block_frame_003.png",
+            "characters/knight/block/knight_block_frame_004.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/knight/die/knight_die_frame_001.png",
+            "characters/knight/die/knight_die_frame_002.png",
+            "characters/knight/die/knight_die_frame_003.png",
+            "characters/knight/die/knight_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/knight/hit/knight_hit_frame_001.png",
+            "characters/knight/hit/knight_hit_frame_002.png",
+            "characters/knight/hit/knight_hit_frame_003.png",
+            "characters/knight/hit/knight_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/knight/idle/knight_idle_frame_001.png",
+            "characters/knight/idle/knight_idle_frame_002.png",
+            "characters/knight/idle/knight_idle_frame_003.png",
+            "characters/knight/idle/knight_idle_frame_004.png",
+            "characters/knight/idle/knight_idle_frame_005.png",
+            "characters/knight/idle/knight_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/knight/walk/knight_walk_frame_001.png",
+            "characters/knight/walk/knight_walk_frame_002.png",
+            "characters/knight/walk/knight_walk_frame_003.png",
+            "characters/knight/walk/knight_walk_frame_004.png",
+            "characters/knight/walk/knight_walk_frame_005.png",
+            "characters/knight/walk/knight_walk_frame_006.png",
+            "characters/knight/walk/knight_walk_frame_007.png",
+            "characters/knight/walk/knight_walk_frame_008.png"
+          ]
+        }
+      },
+      "knight_templar": {
+        "attack01": {
+          "frames": 7,
+          "files": [
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_001.png",
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_002.png",
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_003.png",
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_004.png",
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_005.png",
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_006.png",
+            "characters/knight_templar/attack01/knight_templar_attack01_frame_007.png"
+          ]
+        },
+        "attack02": {
+          "frames": 8,
+          "files": [
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_001.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_002.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_003.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_004.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_005.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_006.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_007.png",
+            "characters/knight_templar/attack02/knight_templar_attack02_frame_008.png"
+          ]
+        },
+        "attack03": {
+          "frames": 11,
+          "files": [
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_001.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_002.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_003.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_004.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_005.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_006.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_007.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_008.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_009.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_010.png",
+            "characters/knight_templar/attack03/knight_templar_attack03_frame_011.png"
+          ]
+        },
+        "block": {
+          "frames": 4,
+          "files": [
+            "characters/knight_templar/block/knight_templar_block_frame_001.png",
+            "characters/knight_templar/block/knight_templar_block_frame_002.png",
+            "characters/knight_templar/block/knight_templar_block_frame_003.png",
+            "characters/knight_templar/block/knight_templar_block_frame_004.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/knight_templar/die/knight_templar_die_frame_001.png",
+            "characters/knight_templar/die/knight_templar_die_frame_002.png",
+            "characters/knight_templar/die/knight_templar_die_frame_003.png",
+            "characters/knight_templar/die/knight_templar_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/knight_templar/hit/knight_templar_hit_frame_001.png",
+            "characters/knight_templar/hit/knight_templar_hit_frame_002.png",
+            "characters/knight_templar/hit/knight_templar_hit_frame_003.png",
+            "characters/knight_templar/hit/knight_templar_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/knight_templar/idle/knight_templar_idle_frame_001.png",
+            "characters/knight_templar/idle/knight_templar_idle_frame_002.png",
+            "characters/knight_templar/idle/knight_templar_idle_frame_003.png",
+            "characters/knight_templar/idle/knight_templar_idle_frame_004.png",
+            "characters/knight_templar/idle/knight_templar_idle_frame_005.png",
+            "characters/knight_templar/idle/knight_templar_idle_frame_006.png"
+          ]
+        },
+        "walk01": {
+          "frames": 8,
+          "files": [
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_001.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_002.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_003.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_004.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_005.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_006.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_007.png",
+            "characters/knight_templar/walk01/knight_templar_walk01_frame_008.png"
+          ]
+        },
+        "walk02": {
+          "frames": 8,
+          "files": [
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_001.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_002.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_003.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_004.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_005.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_006.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_007.png",
+            "characters/knight_templar/walk02/knight_templar_walk02_frame_008.png"
+          ]
+        }
+      },
+      "lancer": {
+        "attack01": {
+          "frames": 6,
+          "files": [
+            "characters/lancer/attack01/lancer_attack01_frame_001.png",
+            "characters/lancer/attack01/lancer_attack01_frame_002.png",
+            "characters/lancer/attack01/lancer_attack01_frame_003.png",
+            "characters/lancer/attack01/lancer_attack01_frame_004.png",
+            "characters/lancer/attack01/lancer_attack01_frame_005.png",
+            "characters/lancer/attack01/lancer_attack01_frame_006.png"
+          ]
+        },
+        "attack02": {
+          "frames": 9,
+          "files": [
+            "characters/lancer/attack02/lancer_attack02_frame_001.png",
+            "characters/lancer/attack02/lancer_attack02_frame_002.png",
+            "characters/lancer/attack02/lancer_attack02_frame_003.png",
+            "characters/lancer/attack02/lancer_attack02_frame_004.png",
+            "characters/lancer/attack02/lancer_attack02_frame_005.png",
+            "characters/lancer/attack02/lancer_attack02_frame_006.png",
+            "characters/lancer/attack02/lancer_attack02_frame_007.png",
+            "characters/lancer/attack02/lancer_attack02_frame_008.png",
+            "characters/lancer/attack02/lancer_attack02_frame_009.png"
+          ]
+        },
+        "attack03": {
+          "frames": 8,
+          "files": [
+            "characters/lancer/attack03/lancer_attack03_frame_001.png",
+            "characters/lancer/attack03/lancer_attack03_frame_002.png",
+            "characters/lancer/attack03/lancer_attack03_frame_003.png",
+            "characters/lancer/attack03/lancer_attack03_frame_004.png",
+            "characters/lancer/attack03/lancer_attack03_frame_005.png",
+            "characters/lancer/attack03/lancer_attack03_frame_006.png",
+            "characters/lancer/attack03/lancer_attack03_frame_007.png",
+            "characters/lancer/attack03/lancer_attack03_frame_008.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/lancer/die/lancer_die_frame_001.png",
+            "characters/lancer/die/lancer_die_frame_002.png",
+            "characters/lancer/die/lancer_die_frame_003.png",
+            "characters/lancer/die/lancer_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/lancer/hit/lancer_hit_frame_001.png",
+            "characters/lancer/hit/lancer_hit_frame_002.png",
+            "characters/lancer/hit/lancer_hit_frame_003.png",
+            "characters/lancer/hit/lancer_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/lancer/idle/lancer_idle_frame_001.png",
+            "characters/lancer/idle/lancer_idle_frame_002.png",
+            "characters/lancer/idle/lancer_idle_frame_003.png",
+            "characters/lancer/idle/lancer_idle_frame_004.png",
+            "characters/lancer/idle/lancer_idle_frame_005.png",
+            "characters/lancer/idle/lancer_idle_frame_006.png"
+          ]
+        },
+        "walk01": {
+          "frames": 8,
+          "files": [
+            "characters/lancer/walk01/lancer_walk01_frame_001.png",
+            "characters/lancer/walk01/lancer_walk01_frame_002.png",
+            "characters/lancer/walk01/lancer_walk01_frame_003.png",
+            "characters/lancer/walk01/lancer_walk01_frame_004.png",
+            "characters/lancer/walk01/lancer_walk01_frame_005.png",
+            "characters/lancer/walk01/lancer_walk01_frame_006.png",
+            "characters/lancer/walk01/lancer_walk01_frame_007.png",
+            "characters/lancer/walk01/lancer_walk01_frame_008.png"
+          ]
+        },
+        "walk02": {
+          "frames": 8,
+          "files": [
+            "characters/lancer/walk02/lancer_walk02_frame_001.png",
+            "characters/lancer/walk02/lancer_walk02_frame_002.png",
+            "characters/lancer/walk02/lancer_walk02_frame_003.png",
+            "characters/lancer/walk02/lancer_walk02_frame_004.png",
+            "characters/lancer/walk02/lancer_walk02_frame_005.png",
+            "characters/lancer/walk02/lancer_walk02_frame_006.png",
+            "characters/lancer/walk02/lancer_walk02_frame_007.png",
+            "characters/lancer/walk02/lancer_walk02_frame_008.png"
+          ]
+        }
+      },
+      "priest": {
+        "attack": {
+          "frames": 9,
+          "files": [
+            "characters/priest/attack/priest_attack_frame_001.png",
+            "characters/priest/attack/priest_attack_frame_002.png",
+            "characters/priest/attack/priest_attack_frame_003.png",
+            "characters/priest/attack/priest_attack_frame_004.png",
+            "characters/priest/attack/priest_attack_frame_005.png",
+            "characters/priest/attack/priest_attack_frame_006.png",
+            "characters/priest/attack/priest_attack_frame_007.png",
+            "characters/priest/attack/priest_attack_frame_008.png",
+            "characters/priest/attack/priest_attack_frame_009.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/priest/die/priest_die_frame_001.png",
+            "characters/priest/die/priest_die_frame_002.png",
+            "characters/priest/die/priest_die_frame_003.png",
+            "characters/priest/die/priest_die_frame_004.png"
+          ]
+        },
+        "heal": {
+          "frames": 6,
+          "files": [
+            "characters/priest/heal/priest_heal_frame_001.png",
+            "characters/priest/heal/priest_heal_frame_002.png",
+            "characters/priest/heal/priest_heal_frame_003.png",
+            "characters/priest/heal/priest_heal_frame_004.png",
+            "characters/priest/heal/priest_heal_frame_005.png",
+            "characters/priest/heal/priest_heal_frame_006.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/priest/hit/priest_hit_frame_001.png",
+            "characters/priest/hit/priest_hit_frame_002.png",
+            "characters/priest/hit/priest_hit_frame_003.png",
+            "characters/priest/hit/priest_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/priest/idle/priest_idle_frame_001.png",
+            "characters/priest/idle/priest_idle_frame_002.png",
+            "characters/priest/idle/priest_idle_frame_003.png",
+            "characters/priest/idle/priest_idle_frame_004.png",
+            "characters/priest/idle/priest_idle_frame_005.png",
+            "characters/priest/idle/priest_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/priest/walk/priest_walk_frame_001.png",
+            "characters/priest/walk/priest_walk_frame_002.png",
+            "characters/priest/walk/priest_walk_frame_003.png",
+            "characters/priest/walk/priest_walk_frame_004.png",
+            "characters/priest/walk/priest_walk_frame_005.png",
+            "characters/priest/walk/priest_walk_frame_006.png",
+            "characters/priest/walk/priest_walk_frame_007.png",
+            "characters/priest/walk/priest_walk_frame_008.png"
+          ]
+        }
+      },
+      "soldier": {
+        "attack01": {
+          "frames": 6,
+          "files": [
+            "characters/soldier/attack01/soldier_attack01_frame_001.png",
+            "characters/soldier/attack01/soldier_attack01_frame_002.png",
+            "characters/soldier/attack01/soldier_attack01_frame_003.png",
+            "characters/soldier/attack01/soldier_attack01_frame_004.png",
+            "characters/soldier/attack01/soldier_attack01_frame_005.png",
+            "characters/soldier/attack01/soldier_attack01_frame_006.png"
+          ]
+        },
+        "attack02": {
+          "frames": 6,
+          "files": [
+            "characters/soldier/attack02/soldier_attack02_frame_001.png",
+            "characters/soldier/attack02/soldier_attack02_frame_002.png",
+            "characters/soldier/attack02/soldier_attack02_frame_003.png",
+            "characters/soldier/attack02/soldier_attack02_frame_004.png",
+            "characters/soldier/attack02/soldier_attack02_frame_005.png",
+            "characters/soldier/attack02/soldier_attack02_frame_006.png"
+          ]
+        },
+        "attack03": {
+          "frames": 9,
+          "files": [
+            "characters/soldier/attack03/soldier_attack03_frame_001.png",
+            "characters/soldier/attack03/soldier_attack03_frame_002.png",
+            "characters/soldier/attack03/soldier_attack03_frame_003.png",
+            "characters/soldier/attack03/soldier_attack03_frame_004.png",
+            "characters/soldier/attack03/soldier_attack03_frame_005.png",
+            "characters/soldier/attack03/soldier_attack03_frame_006.png",
+            "characters/soldier/attack03/soldier_attack03_frame_007.png",
+            "characters/soldier/attack03/soldier_attack03_frame_008.png",
+            "characters/soldier/attack03/soldier_attack03_frame_009.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/soldier/die/soldier_die_frame_001.png",
+            "characters/soldier/die/soldier_die_frame_002.png",
+            "characters/soldier/die/soldier_die_frame_003.png",
+            "characters/soldier/die/soldier_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/soldier/hit/soldier_hit_frame_001.png",
+            "characters/soldier/hit/soldier_hit_frame_002.png",
+            "characters/soldier/hit/soldier_hit_frame_003.png",
+            "characters/soldier/hit/soldier_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/soldier/idle/soldier_idle_frame_001.png",
+            "characters/soldier/idle/soldier_idle_frame_002.png",
+            "characters/soldier/idle/soldier_idle_frame_003.png",
+            "characters/soldier/idle/soldier_idle_frame_004.png",
+            "characters/soldier/idle/soldier_idle_frame_005.png",
+            "characters/soldier/idle/soldier_idle_frame_006.png"
+          ]
+        },
+        "shadow_attack2": {
+          "frames": 6,
+          "files": [
+            "characters/soldier/shadow_attack2/soldier_shadow_attack2_frame_001.png",
+            "characters/soldier/shadow_attack2/soldier_shadow_attack2_frame_002.png",
+            "characters/soldier/shadow_attack2/soldier_shadow_attack2_frame_003.png",
+            "characters/soldier/shadow_attack2/soldier_shadow_attack2_frame_004.png",
+            "characters/soldier/shadow_attack2/soldier_shadow_attack2_frame_005.png",
+            "characters/soldier/shadow_attack2/soldier_shadow_attack2_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/soldier/walk/soldier_walk_frame_001.png",
+            "characters/soldier/walk/soldier_walk_frame_002.png",
+            "characters/soldier/walk/soldier_walk_frame_003.png",
+            "characters/soldier/walk/soldier_walk_frame_004.png",
+            "characters/soldier/walk/soldier_walk_frame_005.png",
+            "characters/soldier/walk/soldier_walk_frame_006.png",
+            "characters/soldier/walk/soldier_walk_frame_007.png",
+            "characters/soldier/walk/soldier_walk_frame_008.png"
+          ]
+        }
+      },
+      "swordsman": {
+        "attack01": {
+          "frames": 7,
+          "files": [
+            "characters/swordsman/attack01/swordsman_attack01_frame_001.png",
+            "characters/swordsman/attack01/swordsman_attack01_frame_002.png",
+            "characters/swordsman/attack01/swordsman_attack01_frame_003.png",
+            "characters/swordsman/attack01/swordsman_attack01_frame_004.png",
+            "characters/swordsman/attack01/swordsman_attack01_frame_005.png",
+            "characters/swordsman/attack01/swordsman_attack01_frame_006.png",
+            "characters/swordsman/attack01/swordsman_attack01_frame_007.png"
+          ]
+        },
+        "attack02": {
+          "frames": 15,
+          "files": [
+            "characters/swordsman/attack02/swordsman_attack02_frame_001.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_002.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_003.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_004.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_005.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_006.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_007.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_008.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_009.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_010.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_011.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_012.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_013.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_014.png",
+            "characters/swordsman/attack02/swordsman_attack02_frame_015.png"
+          ]
+        },
+        "attack3": {
+          "frames": 12,
+          "files": [
+            "characters/swordsman/attack3/swordsman_attack3_frame_001.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_002.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_003.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_004.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_005.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_006.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_007.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_008.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_009.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_010.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_011.png",
+            "characters/swordsman/attack3/swordsman_attack3_frame_012.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/swordsman/die/swordsman_die_frame_001.png",
+            "characters/swordsman/die/swordsman_die_frame_002.png",
+            "characters/swordsman/die/swordsman_die_frame_003.png",
+            "characters/swordsman/die/swordsman_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 5,
+          "files": [
+            "characters/swordsman/hit/swordsman_hit_frame_001.png",
+            "characters/swordsman/hit/swordsman_hit_frame_002.png",
+            "characters/swordsman/hit/swordsman_hit_frame_003.png",
+            "characters/swordsman/hit/swordsman_hit_frame_004.png",
+            "characters/swordsman/hit/swordsman_hit_frame_005.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/swordsman/idle/swordsman_idle_frame_001.png",
+            "characters/swordsman/idle/swordsman_idle_frame_002.png",
+            "characters/swordsman/idle/swordsman_idle_frame_003.png",
+            "characters/swordsman/idle/swordsman_idle_frame_004.png",
+            "characters/swordsman/idle/swordsman_idle_frame_005.png",
+            "characters/swordsman/idle/swordsman_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/swordsman/walk/swordsman_walk_frame_001.png",
+            "characters/swordsman/walk/swordsman_walk_frame_002.png",
+            "characters/swordsman/walk/swordsman_walk_frame_003.png",
+            "characters/swordsman/walk/swordsman_walk_frame_004.png",
+            "characters/swordsman/walk/swordsman_walk_frame_005.png",
+            "characters/swordsman/walk/swordsman_walk_frame_006.png",
+            "characters/swordsman/walk/swordsman_walk_frame_007.png",
+            "characters/swordsman/walk/swordsman_walk_frame_008.png"
+          ]
+        }
+      },
+      "wizard": {
+        "attack01": {
+          "frames": 6,
+          "files": [
+            "characters/wizard/attack01/wizard_attack01_frame_001.png",
+            "characters/wizard/attack01/wizard_attack01_frame_002.png",
+            "characters/wizard/attack01/wizard_attack01_frame_003.png",
+            "characters/wizard/attack01/wizard_attack01_frame_004.png",
+            "characters/wizard/attack01/wizard_attack01_frame_005.png",
+            "characters/wizard/attack01/wizard_attack01_frame_006.png"
+          ]
+        },
+        "attack02": {
+          "frames": 6,
+          "files": [
+            "characters/wizard/attack02/wizard_attack02_frame_001.png",
+            "characters/wizard/attack02/wizard_attack02_frame_002.png",
+            "characters/wizard/attack02/wizard_attack02_frame_003.png",
+            "characters/wizard/attack02/wizard_attack02_frame_004.png",
+            "characters/wizard/attack02/wizard_attack02_frame_005.png",
+            "characters/wizard/attack02/wizard_attack02_frame_006.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "characters/wizard/die/wizard_die_frame_001.png",
+            "characters/wizard/die/wizard_die_frame_002.png",
+            "characters/wizard/die/wizard_die_frame_003.png",
+            "characters/wizard/die/wizard_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "characters/wizard/hit/wizard_hit_frame_001.png",
+            "characters/wizard/hit/wizard_hit_frame_002.png",
+            "characters/wizard/hit/wizard_hit_frame_003.png",
+            "characters/wizard/hit/wizard_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "characters/wizard/idle/wizard_idle_frame_001.png",
+            "characters/wizard/idle/wizard_idle_frame_002.png",
+            "characters/wizard/idle/wizard_idle_frame_003.png",
+            "characters/wizard/idle/wizard_idle_frame_004.png",
+            "characters/wizard/idle/wizard_idle_frame_005.png",
+            "characters/wizard/idle/wizard_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "characters/wizard/walk/wizard_walk_frame_001.png",
+            "characters/wizard/walk/wizard_walk_frame_002.png",
+            "characters/wizard/walk/wizard_walk_frame_003.png",
+            "characters/wizard/walk/wizard_walk_frame_004.png",
+            "characters/wizard/walk/wizard_walk_frame_005.png",
+            "characters/wizard/walk/wizard_walk_frame_006.png",
+            "characters/wizard/walk/wizard_walk_frame_007.png",
+            "characters/wizard/walk/wizard_walk_frame_008.png"
+          ]
+        }
+      }
+    },
+    "projectiles": {
+      "archer": {
+        "arrow02_100x100": {
+          "frames": 1,
+          "files": [
+            "projectiles/archer/arrow02_100x100/archer_arrow02_100x100_frame_001.png"
+          ]
+        }
+      },
+      "priest": {
+        "attack_effect": {
+          "frames": 5,
+          "files": [
+            "projectiles/priest/attack_effect/priest_attack_effect_frame_001.png",
+            "projectiles/priest/attack_effect/priest_attack_effect_frame_002.png",
+            "projectiles/priest/attack_effect/priest_attack_effect_frame_003.png",
+            "projectiles/priest/attack_effect/priest_attack_effect_frame_004.png",
+            "projectiles/priest/attack_effect/priest_attack_effect_frame_005.png"
+          ]
+        },
+        "heal_effect": {
+          "frames": 4,
+          "files": [
+            "projectiles/priest/heal_effect/priest_heal_effect_frame_001.png",
+            "projectiles/priest/heal_effect/priest_heal_effect_frame_002.png",
+            "projectiles/priest/heal_effect/priest_heal_effect_frame_003.png",
+            "projectiles/priest/heal_effect/priest_heal_effect_frame_004.png"
+          ]
+        }
+      },
+      "skeleton_archer": {
+        "arrow03_100x100": {
+          "frames": 1,
+          "files": [
+            "projectiles/skeleton_archer/arrow03_100x100/skeleton_archer_arrow03_100x100_frame_001.png"
+          ]
+        }
+      },
+      "soldier": {
+        "arrow01_100x100": {
+          "frames": 1,
+          "files": [
+            "projectiles/soldier/arrow01_100x100/soldier_arrow01_100x100_frame_001.png"
+          ]
+        }
+      },
+      "wizard": {
+        "attack01_effect": {
+          "frames": 10,
+          "files": [
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_001.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_002.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_003.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_004.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_005.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_006.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_007.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_008.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_009.png",
+            "projectiles/wizard/attack01_effect/wizard_attack01_effect_frame_010.png"
+          ]
+        },
+        "attack02_effect": {
+          "frames": 7,
+          "files": [
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_001.png",
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_002.png",
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_003.png",
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_004.png",
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_005.png",
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_006.png",
+            "projectiles/wizard/attack02_effect/wizard_attack02_effect_frame_007.png"
+          ]
+        }
+      }
+    },
+    "monsters": {
+      "armored_orc": {
+        "attack01": {
+          "frames": 7,
+          "files": [
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_001.png",
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_002.png",
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_003.png",
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_004.png",
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_005.png",
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_006.png",
+            "monsters/armored_orc/attack01/armored_orc_attack01_frame_007.png"
+          ]
+        },
+        "attack02": {
+          "frames": 8,
+          "files": [
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_001.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_002.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_003.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_004.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_005.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_006.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_007.png",
+            "monsters/armored_orc/attack02/armored_orc_attack02_frame_008.png"
+          ]
+        },
+        "attack03": {
+          "frames": 9,
+          "files": [
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_001.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_002.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_003.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_004.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_005.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_006.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_007.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_008.png",
+            "monsters/armored_orc/attack03/armored_orc_attack03_frame_009.png"
+          ]
+        },
+        "block": {
+          "frames": 4,
+          "files": [
+            "monsters/armored_orc/block/armored_orc_block_frame_001.png",
+            "monsters/armored_orc/block/armored_orc_block_frame_002.png",
+            "monsters/armored_orc/block/armored_orc_block_frame_003.png",
+            "monsters/armored_orc/block/armored_orc_block_frame_004.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/armored_orc/die/armored_orc_die_frame_001.png",
+            "monsters/armored_orc/die/armored_orc_die_frame_002.png",
+            "monsters/armored_orc/die/armored_orc_die_frame_003.png",
+            "monsters/armored_orc/die/armored_orc_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/armored_orc/hit/armored_orc_hit_frame_001.png",
+            "monsters/armored_orc/hit/armored_orc_hit_frame_002.png",
+            "monsters/armored_orc/hit/armored_orc_hit_frame_003.png",
+            "monsters/armored_orc/hit/armored_orc_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/armored_orc/idle/armored_orc_idle_frame_001.png",
+            "monsters/armored_orc/idle/armored_orc_idle_frame_002.png",
+            "monsters/armored_orc/idle/armored_orc_idle_frame_003.png",
+            "monsters/armored_orc/idle/armored_orc_idle_frame_004.png",
+            "monsters/armored_orc/idle/armored_orc_idle_frame_005.png",
+            "monsters/armored_orc/idle/armored_orc_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/armored_orc/walk/armored_orc_walk_frame_001.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_002.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_003.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_004.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_005.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_006.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_007.png",
+            "monsters/armored_orc/walk/armored_orc_walk_frame_008.png"
+          ]
+        }
+      },
+      "armored_skeleton": {
+        "attack01": {
+          "frames": 8,
+          "files": [
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_001.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_002.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_003.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_004.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_005.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_006.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_007.png",
+            "monsters/armored_skeleton/attack01/armored_skeleton_attack01_frame_008.png"
+          ]
+        },
+        "attack02": {
+          "frames": 9,
+          "files": [
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_001.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_002.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_003.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_004.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_005.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_006.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_007.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_008.png",
+            "monsters/armored_skeleton/attack02/armored_skeleton_attack02_frame_009.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/armored_skeleton/die/armored_skeleton_die_frame_001.png",
+            "monsters/armored_skeleton/die/armored_skeleton_die_frame_002.png",
+            "monsters/armored_skeleton/die/armored_skeleton_die_frame_003.png",
+            "monsters/armored_skeleton/die/armored_skeleton_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/armored_skeleton/hit/armored_skeleton_hit_frame_001.png",
+            "monsters/armored_skeleton/hit/armored_skeleton_hit_frame_002.png",
+            "monsters/armored_skeleton/hit/armored_skeleton_hit_frame_003.png",
+            "monsters/armored_skeleton/hit/armored_skeleton_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/armored_skeleton/idle/armored_skeleton_idle_frame_001.png",
+            "monsters/armored_skeleton/idle/armored_skeleton_idle_frame_002.png",
+            "monsters/armored_skeleton/idle/armored_skeleton_idle_frame_003.png",
+            "monsters/armored_skeleton/idle/armored_skeleton_idle_frame_004.png",
+            "monsters/armored_skeleton/idle/armored_skeleton_idle_frame_005.png",
+            "monsters/armored_skeleton/idle/armored_skeleton_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_001.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_002.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_003.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_004.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_005.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_006.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_007.png",
+            "monsters/armored_skeleton/walk/armored_skeleton_walk_frame_008.png"
+          ]
+        }
+      },
+      "elite_orc": {
+        "attack01": {
+          "frames": 7,
+          "files": [
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_001.png",
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_002.png",
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_003.png",
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_004.png",
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_005.png",
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_006.png",
+            "monsters/elite_orc/attack01/elite_orc_attack01_frame_007.png"
+          ]
+        },
+        "attack02": {
+          "frames": 11,
+          "files": [
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_001.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_002.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_003.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_004.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_005.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_006.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_007.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_008.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_009.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_010.png",
+            "monsters/elite_orc/attack02/elite_orc_attack02_frame_011.png"
+          ]
+        },
+        "attack03": {
+          "frames": 9,
+          "files": [
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_001.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_002.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_003.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_004.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_005.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_006.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_007.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_008.png",
+            "monsters/elite_orc/attack03/elite_orc_attack03_frame_009.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/elite_orc/die/elite_orc_die_frame_001.png",
+            "monsters/elite_orc/die/elite_orc_die_frame_002.png",
+            "monsters/elite_orc/die/elite_orc_die_frame_003.png",
+            "monsters/elite_orc/die/elite_orc_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/elite_orc/hit/elite_orc_hit_frame_001.png",
+            "monsters/elite_orc/hit/elite_orc_hit_frame_002.png",
+            "monsters/elite_orc/hit/elite_orc_hit_frame_003.png",
+            "monsters/elite_orc/hit/elite_orc_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/elite_orc/idle/elite_orc_idle_frame_001.png",
+            "monsters/elite_orc/idle/elite_orc_idle_frame_002.png",
+            "monsters/elite_orc/idle/elite_orc_idle_frame_003.png",
+            "monsters/elite_orc/idle/elite_orc_idle_frame_004.png",
+            "monsters/elite_orc/idle/elite_orc_idle_frame_005.png",
+            "monsters/elite_orc/idle/elite_orc_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/elite_orc/walk/elite_orc_walk_frame_001.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_002.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_003.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_004.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_005.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_006.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_007.png",
+            "monsters/elite_orc/walk/elite_orc_walk_frame_008.png"
+          ]
+        }
+      },
+      "greatsword_skeleton": {
+        "attack01": {
+          "frames": 9,
+          "files": [
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_001.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_002.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_003.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_004.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_005.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_006.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_007.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_008.png",
+            "monsters/greatsword_skeleton/attack01/greatsword_skeleton_attack01_frame_009.png"
+          ]
+        },
+        "attack02": {
+          "frames": 12,
+          "files": [
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_001.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_002.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_003.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_004.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_005.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_006.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_007.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_008.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_009.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_010.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_011.png",
+            "monsters/greatsword_skeleton/attack02/greatsword_skeleton_attack02_frame_012.png"
+          ]
+        },
+        "attack03": {
+          "frames": 8,
+          "files": [
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_001.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_002.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_003.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_004.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_005.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_006.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_007.png",
+            "monsters/greatsword_skeleton/attack03/greatsword_skeleton_attack03_frame_008.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/greatsword_skeleton/die/greatsword_skeleton_die_frame_001.png",
+            "monsters/greatsword_skeleton/die/greatsword_skeleton_die_frame_002.png",
+            "monsters/greatsword_skeleton/die/greatsword_skeleton_die_frame_003.png",
+            "monsters/greatsword_skeleton/die/greatsword_skeleton_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/greatsword_skeleton/hit/greatsword_skeleton_hit_frame_001.png",
+            "monsters/greatsword_skeleton/hit/greatsword_skeleton_hit_frame_002.png",
+            "monsters/greatsword_skeleton/hit/greatsword_skeleton_hit_frame_003.png",
+            "monsters/greatsword_skeleton/hit/greatsword_skeleton_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/greatsword_skeleton/idle/greatsword_skeleton_idle_frame_001.png",
+            "monsters/greatsword_skeleton/idle/greatsword_skeleton_idle_frame_002.png",
+            "monsters/greatsword_skeleton/idle/greatsword_skeleton_idle_frame_003.png",
+            "monsters/greatsword_skeleton/idle/greatsword_skeleton_idle_frame_004.png",
+            "monsters/greatsword_skeleton/idle/greatsword_skeleton_idle_frame_005.png",
+            "monsters/greatsword_skeleton/idle/greatsword_skeleton_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 9,
+          "files": [
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_001.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_002.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_003.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_004.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_005.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_006.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_007.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_008.png",
+            "monsters/greatsword_skeleton/walk/greatsword_skeleton_walk_frame_009.png"
+          ]
+        }
+      },
+      "orc": {
+        "attack01": {
+          "frames": 6,
+          "files": [
+            "monsters/orc/attack01/orc_attack01_frame_001.png",
+            "monsters/orc/attack01/orc_attack01_frame_002.png",
+            "monsters/orc/attack01/orc_attack01_frame_003.png",
+            "monsters/orc/attack01/orc_attack01_frame_004.png",
+            "monsters/orc/attack01/orc_attack01_frame_005.png",
+            "monsters/orc/attack01/orc_attack01_frame_006.png"
+          ]
+        },
+        "attack02": {
+          "frames": 6,
+          "files": [
+            "monsters/orc/attack02/orc_attack02_frame_001.png",
+            "monsters/orc/attack02/orc_attack02_frame_002.png",
+            "monsters/orc/attack02/orc_attack02_frame_003.png",
+            "monsters/orc/attack02/orc_attack02_frame_004.png",
+            "monsters/orc/attack02/orc_attack02_frame_005.png",
+            "monsters/orc/attack02/orc_attack02_frame_006.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/orc/die/orc_die_frame_001.png",
+            "monsters/orc/die/orc_die_frame_002.png",
+            "monsters/orc/die/orc_die_frame_003.png",
+            "monsters/orc/die/orc_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/orc/hit/orc_hit_frame_001.png",
+            "monsters/orc/hit/orc_hit_frame_002.png",
+            "monsters/orc/hit/orc_hit_frame_003.png",
+            "monsters/orc/hit/orc_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/orc/idle/orc_idle_frame_001.png",
+            "monsters/orc/idle/orc_idle_frame_002.png",
+            "monsters/orc/idle/orc_idle_frame_003.png",
+            "monsters/orc/idle/orc_idle_frame_004.png",
+            "monsters/orc/idle/orc_idle_frame_005.png",
+            "monsters/orc/idle/orc_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/orc/walk/orc_walk_frame_001.png",
+            "monsters/orc/walk/orc_walk_frame_002.png",
+            "monsters/orc/walk/orc_walk_frame_003.png",
+            "monsters/orc/walk/orc_walk_frame_004.png",
+            "monsters/orc/walk/orc_walk_frame_005.png",
+            "monsters/orc/walk/orc_walk_frame_006.png",
+            "monsters/orc/walk/orc_walk_frame_007.png",
+            "monsters/orc/walk/orc_walk_frame_008.png"
+          ]
+        }
+      },
+      "orc_rider": {
+        "attack01": {
+          "frames": 8,
+          "files": [
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_001.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_002.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_003.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_004.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_005.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_006.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_007.png",
+            "monsters/orc_rider/attack01/orc_rider_attack01_frame_008.png"
+          ]
+        },
+        "attack02": {
+          "frames": 9,
+          "files": [
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_001.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_002.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_003.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_004.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_005.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_006.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_007.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_008.png",
+            "monsters/orc_rider/attack02/orc_rider_attack02_frame_009.png"
+          ]
+        },
+        "attack03": {
+          "frames": 11,
+          "files": [
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_001.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_002.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_003.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_004.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_005.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_006.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_007.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_008.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_009.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_010.png",
+            "monsters/orc_rider/attack03/orc_rider_attack03_frame_011.png"
+          ]
+        },
+        "block": {
+          "frames": 4,
+          "files": [
+            "monsters/orc_rider/block/orc_rider_block_frame_001.png",
+            "monsters/orc_rider/block/orc_rider_block_frame_002.png",
+            "monsters/orc_rider/block/orc_rider_block_frame_003.png",
+            "monsters/orc_rider/block/orc_rider_block_frame_004.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/orc_rider/die/orc_rider_die_frame_001.png",
+            "monsters/orc_rider/die/orc_rider_die_frame_002.png",
+            "monsters/orc_rider/die/orc_rider_die_frame_003.png",
+            "monsters/orc_rider/die/orc_rider_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/orc_rider/hit/orc_rider_hit_frame_001.png",
+            "monsters/orc_rider/hit/orc_rider_hit_frame_002.png",
+            "monsters/orc_rider/hit/orc_rider_hit_frame_003.png",
+            "monsters/orc_rider/hit/orc_rider_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/orc_rider/idle/orc_rider_idle_frame_001.png",
+            "monsters/orc_rider/idle/orc_rider_idle_frame_002.png",
+            "monsters/orc_rider/idle/orc_rider_idle_frame_003.png",
+            "monsters/orc_rider/idle/orc_rider_idle_frame_004.png",
+            "monsters/orc_rider/idle/orc_rider_idle_frame_005.png",
+            "monsters/orc_rider/idle/orc_rider_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/orc_rider/walk/orc_rider_walk_frame_001.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_002.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_003.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_004.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_005.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_006.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_007.png",
+            "monsters/orc_rider/walk/orc_rider_walk_frame_008.png"
+          ]
+        }
+      },
+      "skeleton": {
+        "attack01": {
+          "frames": 6,
+          "files": [
+            "monsters/skeleton/attack01/skeleton_attack01_frame_001.png",
+            "monsters/skeleton/attack01/skeleton_attack01_frame_002.png",
+            "monsters/skeleton/attack01/skeleton_attack01_frame_003.png",
+            "monsters/skeleton/attack01/skeleton_attack01_frame_004.png",
+            "monsters/skeleton/attack01/skeleton_attack01_frame_005.png",
+            "monsters/skeleton/attack01/skeleton_attack01_frame_006.png"
+          ]
+        },
+        "attack02": {
+          "frames": 7,
+          "files": [
+            "monsters/skeleton/attack02/skeleton_attack02_frame_001.png",
+            "monsters/skeleton/attack02/skeleton_attack02_frame_002.png",
+            "monsters/skeleton/attack02/skeleton_attack02_frame_003.png",
+            "monsters/skeleton/attack02/skeleton_attack02_frame_004.png",
+            "monsters/skeleton/attack02/skeleton_attack02_frame_005.png",
+            "monsters/skeleton/attack02/skeleton_attack02_frame_006.png",
+            "monsters/skeleton/attack02/skeleton_attack02_frame_007.png"
+          ]
+        },
+        "block": {
+          "frames": 4,
+          "files": [
+            "monsters/skeleton/block/skeleton_block_frame_001.png",
+            "monsters/skeleton/block/skeleton_block_frame_002.png",
+            "monsters/skeleton/block/skeleton_block_frame_003.png",
+            "monsters/skeleton/block/skeleton_block_frame_004.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/skeleton/die/skeleton_die_frame_001.png",
+            "monsters/skeleton/die/skeleton_die_frame_002.png",
+            "monsters/skeleton/die/skeleton_die_frame_003.png",
+            "monsters/skeleton/die/skeleton_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/skeleton/hit/skeleton_hit_frame_001.png",
+            "monsters/skeleton/hit/skeleton_hit_frame_002.png",
+            "monsters/skeleton/hit/skeleton_hit_frame_003.png",
+            "monsters/skeleton/hit/skeleton_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/skeleton/idle/skeleton_idle_frame_001.png",
+            "monsters/skeleton/idle/skeleton_idle_frame_002.png",
+            "monsters/skeleton/idle/skeleton_idle_frame_003.png",
+            "monsters/skeleton/idle/skeleton_idle_frame_004.png",
+            "monsters/skeleton/idle/skeleton_idle_frame_005.png",
+            "monsters/skeleton/idle/skeleton_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/skeleton/walk/skeleton_walk_frame_001.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_002.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_003.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_004.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_005.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_006.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_007.png",
+            "monsters/skeleton/walk/skeleton_walk_frame_008.png"
+          ]
+        }
+      },
+      "skeleton_archer": {
+        "attack": {
+          "frames": 9,
+          "files": [
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_001.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_002.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_003.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_004.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_005.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_006.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_007.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_008.png",
+            "monsters/skeleton_archer/attack/skeleton_archer_attack_frame_009.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/skeleton_archer/die/skeleton_archer_die_frame_001.png",
+            "monsters/skeleton_archer/die/skeleton_archer_die_frame_002.png",
+            "monsters/skeleton_archer/die/skeleton_archer_die_frame_003.png",
+            "monsters/skeleton_archer/die/skeleton_archer_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/skeleton_archer/hit/skeleton_archer_hit_frame_001.png",
+            "monsters/skeleton_archer/hit/skeleton_archer_hit_frame_002.png",
+            "monsters/skeleton_archer/hit/skeleton_archer_hit_frame_003.png",
+            "monsters/skeleton_archer/hit/skeleton_archer_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/skeleton_archer/idle/skeleton_archer_idle_frame_001.png",
+            "monsters/skeleton_archer/idle/skeleton_archer_idle_frame_002.png",
+            "monsters/skeleton_archer/idle/skeleton_archer_idle_frame_003.png",
+            "monsters/skeleton_archer/idle/skeleton_archer_idle_frame_004.png",
+            "monsters/skeleton_archer/idle/skeleton_archer_idle_frame_005.png",
+            "monsters/skeleton_archer/idle/skeleton_archer_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_001.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_002.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_003.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_004.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_005.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_006.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_007.png",
+            "monsters/skeleton_archer/walk/skeleton_archer_walk_frame_008.png"
+          ]
+        }
+      },
+      "slime": {
+        "attack01": {
+          "frames": 6,
+          "files": [
+            "monsters/slime/attack01/slime_attack01_frame_001.png",
+            "monsters/slime/attack01/slime_attack01_frame_002.png",
+            "monsters/slime/attack01/slime_attack01_frame_003.png",
+            "monsters/slime/attack01/slime_attack01_frame_004.png",
+            "monsters/slime/attack01/slime_attack01_frame_005.png",
+            "monsters/slime/attack01/slime_attack01_frame_006.png"
+          ]
+        },
+        "attack02": {
+          "frames": 12,
+          "files": [
+            "monsters/slime/attack02/slime_attack02_frame_001.png",
+            "monsters/slime/attack02/slime_attack02_frame_002.png",
+            "monsters/slime/attack02/slime_attack02_frame_003.png",
+            "monsters/slime/attack02/slime_attack02_frame_004.png",
+            "monsters/slime/attack02/slime_attack02_frame_005.png",
+            "monsters/slime/attack02/slime_attack02_frame_006.png",
+            "monsters/slime/attack02/slime_attack02_frame_007.png",
+            "monsters/slime/attack02/slime_attack02_frame_008.png",
+            "monsters/slime/attack02/slime_attack02_frame_009.png",
+            "monsters/slime/attack02/slime_attack02_frame_010.png",
+            "monsters/slime/attack02/slime_attack02_frame_011.png",
+            "monsters/slime/attack02/slime_attack02_frame_012.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/slime/die/slime_die_frame_001.png",
+            "monsters/slime/die/slime_die_frame_002.png",
+            "monsters/slime/die/slime_die_frame_003.png",
+            "monsters/slime/die/slime_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/slime/hit/slime_hit_frame_001.png",
+            "monsters/slime/hit/slime_hit_frame_002.png",
+            "monsters/slime/hit/slime_hit_frame_003.png",
+            "monsters/slime/hit/slime_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/slime/idle/slime_idle_frame_001.png",
+            "monsters/slime/idle/slime_idle_frame_002.png",
+            "monsters/slime/idle/slime_idle_frame_003.png",
+            "monsters/slime/idle/slime_idle_frame_004.png",
+            "monsters/slime/idle/slime_idle_frame_005.png",
+            "monsters/slime/idle/slime_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 6,
+          "files": [
+            "monsters/slime/walk/slime_walk_frame_001.png",
+            "monsters/slime/walk/slime_walk_frame_002.png",
+            "monsters/slime/walk/slime_walk_frame_003.png",
+            "monsters/slime/walk/slime_walk_frame_004.png",
+            "monsters/slime/walk/slime_walk_frame_005.png",
+            "monsters/slime/walk/slime_walk_frame_006.png"
+          ]
+        }
+      },
+      "werebear": {
+        "attack01": {
+          "frames": 9,
+          "files": [
+            "monsters/werebear/attack01/werebear_attack01_frame_001.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_002.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_003.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_004.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_005.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_006.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_007.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_008.png",
+            "monsters/werebear/attack01/werebear_attack01_frame_009.png"
+          ]
+        },
+        "attack02": {
+          "frames": 13,
+          "files": [
+            "monsters/werebear/attack02/werebear_attack02_frame_001.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_002.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_003.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_004.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_005.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_006.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_007.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_008.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_009.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_010.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_011.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_012.png",
+            "monsters/werebear/attack02/werebear_attack02_frame_013.png"
+          ]
+        },
+        "attack03": {
+          "frames": 9,
+          "files": [
+            "monsters/werebear/attack03/werebear_attack03_frame_001.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_002.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_003.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_004.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_005.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_006.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_007.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_008.png",
+            "monsters/werebear/attack03/werebear_attack03_frame_009.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/werebear/die/werebear_die_frame_001.png",
+            "monsters/werebear/die/werebear_die_frame_002.png",
+            "monsters/werebear/die/werebear_die_frame_003.png",
+            "monsters/werebear/die/werebear_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/werebear/hit/werebear_hit_frame_001.png",
+            "monsters/werebear/hit/werebear_hit_frame_002.png",
+            "monsters/werebear/hit/werebear_hit_frame_003.png",
+            "monsters/werebear/hit/werebear_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/werebear/idle/werebear_idle_frame_001.png",
+            "monsters/werebear/idle/werebear_idle_frame_002.png",
+            "monsters/werebear/idle/werebear_idle_frame_003.png",
+            "monsters/werebear/idle/werebear_idle_frame_004.png",
+            "monsters/werebear/idle/werebear_idle_frame_005.png",
+            "monsters/werebear/idle/werebear_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/werebear/walk/werebear_walk_frame_001.png",
+            "monsters/werebear/walk/werebear_walk_frame_002.png",
+            "monsters/werebear/walk/werebear_walk_frame_003.png",
+            "monsters/werebear/walk/werebear_walk_frame_004.png",
+            "monsters/werebear/walk/werebear_walk_frame_005.png",
+            "monsters/werebear/walk/werebear_walk_frame_006.png",
+            "monsters/werebear/walk/werebear_walk_frame_007.png",
+            "monsters/werebear/walk/werebear_walk_frame_008.png"
+          ]
+        }
+      },
+      "werewolf": {
+        "attack01": {
+          "frames": 9,
+          "files": [
+            "monsters/werewolf/attack01/werewolf_attack01_frame_001.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_002.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_003.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_004.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_005.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_006.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_007.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_008.png",
+            "monsters/werewolf/attack01/werewolf_attack01_frame_009.png"
+          ]
+        },
+        "attack02": {
+          "frames": 13,
+          "files": [
+            "monsters/werewolf/attack02/werewolf_attack02_frame_001.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_002.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_003.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_004.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_005.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_006.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_007.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_008.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_009.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_010.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_011.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_012.png",
+            "monsters/werewolf/attack02/werewolf_attack02_frame_013.png"
+          ]
+        },
+        "die": {
+          "frames": 4,
+          "files": [
+            "monsters/werewolf/die/werewolf_die_frame_001.png",
+            "monsters/werewolf/die/werewolf_die_frame_002.png",
+            "monsters/werewolf/die/werewolf_die_frame_003.png",
+            "monsters/werewolf/die/werewolf_die_frame_004.png"
+          ]
+        },
+        "hit": {
+          "frames": 4,
+          "files": [
+            "monsters/werewolf/hit/werewolf_hit_frame_001.png",
+            "monsters/werewolf/hit/werewolf_hit_frame_002.png",
+            "monsters/werewolf/hit/werewolf_hit_frame_003.png",
+            "monsters/werewolf/hit/werewolf_hit_frame_004.png"
+          ]
+        },
+        "idle": {
+          "frames": 6,
+          "files": [
+            "monsters/werewolf/idle/werewolf_idle_frame_001.png",
+            "monsters/werewolf/idle/werewolf_idle_frame_002.png",
+            "monsters/werewolf/idle/werewolf_idle_frame_003.png",
+            "monsters/werewolf/idle/werewolf_idle_frame_004.png",
+            "monsters/werewolf/idle/werewolf_idle_frame_005.png",
+            "monsters/werewolf/idle/werewolf_idle_frame_006.png"
+          ]
+        },
+        "walk": {
+          "frames": 8,
+          "files": [
+            "monsters/werewolf/walk/werewolf_walk_frame_001.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_002.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_003.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_004.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_005.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_006.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_007.png",
+            "monsters/werewolf/walk/werewolf_walk_frame_008.png"
+          ]
+        }
+      }
+    }
+  }
+}

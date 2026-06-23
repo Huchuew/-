@@ -1,0 +1,282 @@
+[
+  {
+    "file": "01_grassland_castle.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 0,
+      "right": 1536,
+      "bottom": 112
+    },
+    "size": {
+      "width": 1536,
+      "height": 112
+    }
+  },
+  {
+    "file": "02_forest.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 136,
+      "right": 1536,
+      "bottom": 224
+    },
+    "size": {
+      "width": 1536,
+      "height": 88
+    }
+  },
+  {
+    "file": "03_autumn_ruins.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 234,
+      "right": 1536,
+      "bottom": 331
+    },
+    "size": {
+      "width": 1536,
+      "height": 97
+    }
+  },
+  {
+    "file": "04_snow_mountains.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 342,
+      "right": 1536,
+      "bottom": 447
+    },
+    "size": {
+      "width": 1536,
+      "height": 105
+    }
+  },
+  {
+    "file": "05_desert_arch.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 448,
+      "right": 1536,
+      "bottom": 547
+    },
+    "size": {
+      "width": 1536,
+      "height": 99
+    }
+  },
+  {
+    "file": "06_crystal_cave.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 556,
+      "right": 1536,
+      "bottom": 650
+    },
+    "size": {
+      "width": 1536,
+      "height": 94
+    }
+  },
+  {
+    "file": "07_volcano.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 652,
+      "right": 1536,
+      "bottom": 728
+    },
+    "size": {
+      "width": 1536,
+      "height": 76
+    }
+  },
+  {
+    "file": "08_beach_shipwreck.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 737,
+      "right": 1536,
+      "bottom": 816
+    },
+    "size": {
+      "width": 1536,
+      "height": 79
+    }
+  },
+  {
+    "file": "09_ancient_ruins.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 824,
+      "right": 1536,
+      "bottom": 926
+    },
+    "size": {
+      "width": 1536,
+      "height": 102
+    }
+  },
+  {
+    "file": "10_graveyard.png",
+    "source": "a564b5fc-d1b1-5a23-85a8-b57bd17e9dd1.png",
+    "crop_box": {
+      "left": 0,
+      "top": 926,
+      "right": 1536,
+      "bottom": 1024
+    },
+    "size": {
+      "width": 1536,
+      "height": 98
+    }
+  },
+  {
+    "file": "11_windmill_village.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 0,
+      "right": 1536,
+      "bottom": 111
+    },
+    "size": {
+      "width": 1536,
+      "height": 111
+    }
+  },
+  {
+    "file": "12_enchanted_forest.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 142,
+      "right": 1536,
+      "bottom": 215
+    },
+    "size": {
+      "width": 1536,
+      "height": 73
+    }
+  },
+  {
+    "file": "13_overgrown_ruins.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 225,
+      "right": 1536,
+      "bottom": 313
+    },
+    "size": {
+      "width": 1536,
+      "height": 88
+    }
+  },
+  {
+    "file": "14_castle_hall.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 340,
+      "right": 1536,
+      "bottom": 412
+    },
+    "size": {
+      "width": 1536,
+      "height": 72
+    }
+  },
+  {
+    "file": "15_village_night.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 418,
+      "right": 1536,
+      "bottom": 512
+    },
+    "size": {
+      "width": 1536,
+      "height": 94
+    }
+  },
+  {
+    "file": "16_seaside_port.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 512,
+      "right": 1536,
+      "bottom": 607
+    },
+    "size": {
+      "width": 1536,
+      "height": 95
+    }
+  },
+  {
+    "file": "17_bone_desert.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 607,
+      "right": 1536,
+      "bottom": 703
+    },
+    "size": {
+      "width": 1536,
+      "height": 96
+    }
+  },
+  {
+    "file": "18_swamp.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 705,
+      "right": 1536,
+      "bottom": 799
+    },
+    "size": {
+      "width": 1536,
+      "height": 94
+    }
+  },
+  {
+    "file": "19_ice_cave.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 802,
+      "right": 1536,
+      "bottom": 894
+    },
+    "size": {
+      "width": 1536,
+      "height": 92
+    }
+  },
+  {
+    "file": "20_floating_islands.png",
+    "source": "b3b94567-eab2-5be3-af67-b6f7c590e2d6.png",
+    "crop_box": {
+      "left": 0,
+      "top": 896,
+      "right": 1536,
+      "bottom": 1024
+    },
+    "size": {
+      "width": 1536,
+      "height": 128
+    }
+  }
+]

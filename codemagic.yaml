@@ -1,0 +1,47 @@
+# Mac 없이 iPhone .ipa 빌드 — https://codemagic.io (무료 macOS 빌드 시간 제공)
+# GitHub에 올린 뒤 Codemagic에서 이 저장소 연결 → Start build
+# Apple Developer Program(연 99달러) + App Store Connect API 키 필요
+
+workflows:
+  ios-release:
+    name: 투닥투닥RPG iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      node: 20
+      xcode: latest
+      cocoapods: default
+      vars:
+        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_SCHEME: App
+        BUNDLE_ID: com.tuduk.rpg
+    scripts:
+      - name: Install npm dependencies
+        script: npm ci
+      - name: iOS icons + sync
+        script: |
+          npm run ios:icons
+          npm run build
+          npx cap sync ios
+          node scripts/patch-ios-admob.mjs
+      - name: CocoaPods
+        script: |
+          cd ios/App
+          pod install
+      - name: Code signing
+        script: xcode-project use-profiles
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - $CM_EMAIL_RECIPIENT
+        notify:
+          success: true
+          failure: true

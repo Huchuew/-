@@ -1,0 +1,25 @@
+name: Balance Audit
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+jobs:
+  balance-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Balance audit
+        run: npm run balance:audit

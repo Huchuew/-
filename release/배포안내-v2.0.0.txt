@@ -1,0 +1,23 @@
+투닥투닥RPG v2.0.0 배포 안내
+================================
+
+■ Android APK (지인 배포)
+  파일: release\투닥투닥RPG.apk (약 51MB)
+  버전: 2.0.0 (versionCode 20)
+  패키지: com.tuduk.rpg
+
+  친구에게 보내는 방법:
+  1) 투닥투닥RPG.apk 파일을 카톡·디스코드 등으로 전송
+  2) 받는 사람: 설정 → 보안 → 출처를 알 수 없는 앱 설치 허용
+  3) APK 탭해서 설치
+
+  ※ 이미 설치된 경우: 새 APK로 덮어쓰기 설치 가능 (같은 서명)
+
+■ iPhone (Netlify PWA)
+  https://resplendent-fairy-4505a4.netlify.app
+  Safari → 공유 → 홈 화면에 추가
+
+  웹 갱신 시: npm run netlify:prepare 후 dist 내용을 Netlify에 업로드
+
+■ 다음 빌드
+  npm run release:apk

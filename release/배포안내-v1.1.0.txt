@@ -1,0 +1,25 @@
+투닥투닥RPG v1.1.0 배포 안내
+================================
+
+■ Android APK
+  파일: release\투닥투닥RPG.apk (약 54MB)
+  버전: 1.1.0 (versionCode 11)
+
+■ iPhone (Netlify PWA — 홈 화면 추가)
+  1) Netlify 대시보드 접속
+  2) 사이트: https://resplendent-fairy-4505a4.netlify.app
+  3) Deploys → dist 폴더 내용을 드래그 앤 드롭
+     (index.html, assets, manifest.webmanifest, privacy.html)
+  4) 배포 완료 후 iPhone Safari에서 접속
+  5) 공유(□↑) → 홈 화면에 추가
+
+  dist 경로: 프로젝트\dist
+
+■ iPhone (같은 Wi-Fi 로컬 테스트)
+  npm run iphone:pwa
+  → 터미널에 나온 IP 주소로 Safari 접속 → 홈 화면 추가
+
+■ v1.1.0 주요 변경
+  - 파견 진행률 -11% 버그 수정 (시작 시 소요시간 고정 저장)
+  - 숙소 타이쿤 대규모 패치 (보상·대시보드·던전 연동)
+  - 전투 대격변 패치 (콤보·스킬 피티·피버)
