@@ -7,11 +7,11 @@ import {
   formatPartyIncapBanner, hasPartyIncapacitated,
 } from '../../systems/CharacterStatusSystem';
 import { isDailyBonusClaimable, renderTownRewardsStrip } from './townRewardsStrip';
-import { rivalLeagueHubBadge } from './rivalLeaguePanel';
+import { leaderboardHubBadge } from './leaderboardPanel';
 import { renderEndgameHubButton } from './endgameTeaser';
 import { renderTownHubWidgets } from './townHubWidgets';
 
-export type TownSub = 'hub' | 'trade' | 'news' | 'camp' | 'records' | 'dungeon' | 'endgame' | 'settings' | 'rival';
+export type TownSub = 'hub' | 'trade' | 'news' | 'camp' | 'records' | 'dungeon' | 'endgame' | 'settings' | 'leaderboard';
 
 type HubCard = {
   sub: TownSub;
@@ -66,10 +66,10 @@ export function renderTownHub(save: GameSave, adv: AdventureSystem): string {
   const dailyBadge = isDailyBonusClaimable(save) ? '!' : undefined;
   const newsBadge = dailyBadge;
 
-  const rivalBadge = rivalLeagueHubBadge(save);
+  const lbBadge = leaderboardHubBadge(save);
 
   const lodgingCards: (HubCard | 'records-row')[] = [
-    { sub: 'rival', icon: '🏆', title: '라이벌 리그', desc: 'CPU 길드와 주간 순위 대결', tone: 'rival', badge: rivalBadge },
+    { sub: 'leaderboard', icon: '🏆', title: '모험단 랭킹', desc: '실시간 유저 순위 · 주간 SP 대결', tone: 'leaderboard', badge: lbBadge },
     { sub: 'trade', icon: '💰', title: '거래', desc: '재료 판매(주수입) · 포션·영약 구매', tone: 'trade' },
     { sub: 'news', icon: '📋', title: '소식', desc: '영입 · 일일 보상', tone: 'news', badge: newsBadge },
     { sub: 'camp', icon: '🏕️', title: '캠프', desc: '자동 생산 · 재료 가공', tone: 'camp' },
@@ -78,7 +78,7 @@ export function renderTownHub(save: GameSave, adv: AdventureSystem): string {
   ];
 
   const expeditionCards: (HubCard | 'records-row')[] = [
-    { sub: 'rival', icon: '🏆', title: '라이벌 리그', desc: '이번 주 순위 · 라이벌 격차', tone: 'rival', badge: rivalBadge },
+    { sub: 'leaderboard', icon: '🏆', title: '모험단 랭킹', desc: '최고 층 · DPS · 주간 SP', tone: 'leaderboard', badge: lbBadge },
     { sub: 'dungeon', icon: '⚔️', title: '원정 현황', desc: '층 정보 · 보스 게이트', tone: 'dungeon', wide: true },
     { sub: 'camp', icon: '🏕️', title: '캠프', desc: '원정 준비 버프 확인', tone: 'camp' },
     'records-row',

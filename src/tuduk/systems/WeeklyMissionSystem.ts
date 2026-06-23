@@ -31,8 +31,8 @@ export const WEEKLY_MISSIONS: WeeklyMissionDef[] = [
     progress: s => s.stats.bossClears ?? 0,
   },
   {
-    id: 'rival_daily1',
-    label: '일일 대결 클리어',
+    id: 'lb_daily1',
+    label: '일일 랭킹 미션 클리어',
     target: 1,
     rewardGold: 2800,
     rewardGems: 2,

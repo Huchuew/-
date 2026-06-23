@@ -7886,6 +7886,87 @@ button.town-hub-mini:active {
 .rival-duel-fill { height: 100%; background: linear-gradient(90deg, #66ff99, #44cc88); }
 .rival-allclear-btn { width: 100%; margin-top: 8px; }
 
+/* ── 실유저 랭킹 (Supabase) ── */
+.town-hub-line--leaderboard { border-color: #66aaff44; }
+.town-hub-card--leaderboard .town-hub-card-glow { background: radial-gradient(circle at 0% 0%, #66aaff33, transparent 60%); }
+.town-hub-card--leaderboard { border-color: #66aaff55; }
+
+.lb-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.lb-loading { text-align: center; padding: 24px 12px; color: #aa99cc; font-size: 13px; }
+.lb-spinner { display: inline-block; animation: lb-spin 0.8s linear infinite; margin-right: 6px; }
+@keyframes lb-spin { to { transform: rotate(360deg); } }
+
+.lb-mod-card {
+  padding: 10px 12px; margin-bottom: 10px; border-radius: 10px;
+  background: linear-gradient(135deg, #1a1530, #12101f);
+  border: 1px solid #443366;
+}
+.lb-offline-card {
+  padding: 14px; margin-bottom: 12px; border-radius: 10px;
+  background: #1a1428; border: 1px dashed #665588;
+}
+
+.lb-my-card {
+  display: grid; gap: 8px; margin-bottom: 10px; padding: 12px;
+  border-radius: 10px; border: 1px solid #66ff9955;
+  background: linear-gradient(135deg, #142818, #101820);
+}
+.lb-my-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.lb-my-head strong { font-size: 22px; color: #66ff99; }
+.lb-my-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+}
+.lb-my-stats div {
+  text-align: center; padding: 6px 4px; border-radius: 8px;
+  background: #0e1418; border: 1px solid #2a3844;
+}
+.lb-my-stats em { display: block; font-size: 10px; color: #8899aa; font-style: normal; }
+.lb-my-stats strong { font-size: 13px; color: #eef; }
+
+.lb-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+.lb-tab {
+  flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #332844;
+  background: #140f20; color: #bbaadd; font-size: 12px; cursor: pointer;
+}
+.lb-tab.active { border-color: #66aaff88; background: #1a2840; color: #fff; }
+.lb-sort-hint { margin-bottom: 8px; font-size: 11px; }
+
+.lb-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; max-height: 42vh; overflow-y: auto; }
+.lb-row {
+  display: grid; grid-template-columns: 36px 1fr auto; gap: 8px; align-items: start;
+  padding: 10px; border-radius: 10px; border: 1px solid #2a2038; background: #120e1a;
+}
+.lb-row--me { border-color: #66ff9955; background: #142818; }
+.lb-rank { font-weight: 700; text-align: center; font-size: 14px; padding-top: 2px; }
+.lb-nick { display: block; font-size: 14px; color: #fff; }
+.lb-team { display: block; font-size: 10px; color: #8877aa; margin-top: 2px; }
+.lb-stats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.lb-stat {
+  font-size: 10px; padding: 2px 6px; border-radius: 999px;
+  background: #1e1830; border: 1px solid #332844; color: #ccbbee;
+}
+.lb-weekly-sp { font-weight: 700; color: #ffee88; font-size: 13px; white-space: nowrap; padding-top: 4px; }
+.lb-weekly-sp small { font-size: 9px; color: #aa9977; }
+
+.lb-daily-section { margin: 12px 0; }
+.lb-daily-section h4 { margin-bottom: 4px; font-size: 13px; }
+.lb-duel-row {
+  padding: 8px 10px; margin-bottom: 6px; border-radius: 8px;
+  background: #140f20; border: 1px solid #332844;
+}
+.lb-duel-row.done { border-color: #44aa6644; }
+.lb-duel-row.claimed { opacity: 0.72; }
+.lb-duel-head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.lb-duel-bar { height: 4px; background: #2a2038; border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.lb-duel-fill { height: 100%; background: linear-gradient(90deg, #66aaff, #4488cc); }
+.lb-allclear-btn, .lb-claim-btn { width: 100%; margin-top: 8px; }
+.lb-rules { margin: 8px 0; }
+.lb-rule-list { margin: 8px 0 8px 18px; font-size: 12px; color: #bbaadd; }
+.lb-empty { text-align: center; padding: 16px; }
+.survey-nick-hint { font-size: 10px; color: #8899aa; font-weight: 400; margin-left: 4px; }
+.profile-settings .survey-field { display: block; margin-bottom: 8px; }
+.profile-settings .survey-input { width: 100%; margin-top: 4px; }
+
 /* ── 증강 선택 모달 ── */
 .augment-pick-modal {
   position: fixed;

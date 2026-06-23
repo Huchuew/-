@@ -163,7 +163,7 @@ import { subTabs as htmlSubTabs, worldNavGrid as htmlWorldNavGrid, lodgingSectio
 import { renderSettingsPanel } from './panels/settingsPanel';
 import { renderEndgamePanel } from './panels/endgamePanel';
 import { renderTownHub, townBackButton, type TownSub } from './panels/townPanel';
-import { renderRivalLeaguePanel } from './panels/rivalLeaguePanel';
+import { renderLeaderboardPanel } from './panels/leaderboardPanel';
 import { renderProductionCampPanel, productionCampBuildingIds } from './panels/productionCampPanel';
 import { formatCampProduceOutput } from './panels/minimalCamp';
 import { renderPartyPanel } from './panels/partyPanel';
@@ -1405,7 +1405,7 @@ export class PanelManager implements PanelHost {
       news: 'bulletin',
       camp: 'camp',
       records: 'codex',
-      rival: 'bulletin',
+      leaderboard: 'bulletin',
       dungeon: 'dungeon',
       endgame: 'dungeon',
       settings: 'shop',
@@ -2001,7 +2001,7 @@ export class PanelManager implements PanelHost {
 
   private renderTown(save: GameSave, adv: AdventureSystem) {
     const atLodging = adv.isAtLodging();
-    if (!atLodging && ['hub', 'trade', 'news', 'records', 'settings', 'rival'].includes(this.townSub)) {
+    if (!atLodging && ['hub', 'trade', 'news', 'records', 'settings', 'leaderboard'].includes(this.townSub)) {
       this.townSub = 'dungeon';
     }
     if (atLodging && this.townSub === 'dungeon' && save.inExpedition) {
@@ -2039,8 +2039,8 @@ export class PanelManager implements PanelHost {
       case 'settings':
         renderSettingsPanel(this, save, prefix);
         break;
-      case 'rival':
-        renderRivalLeaguePanel(this, save, prefix);
+      case 'leaderboard':
+        renderLeaderboardPanel(this, save, prefix);
         break;
       default:
         this.townSub = 'hub';

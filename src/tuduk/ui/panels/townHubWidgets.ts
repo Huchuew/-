@@ -4,7 +4,7 @@ import { CHAR_MAP } from '../../data/characters';
 import { RECIPE_MAP } from '../../data/equipment';
 import { ELEMENT_ICON, ELEMENT_LABEL } from '../../data/elemental';
 import { computeTraitSynergyFromSave } from '../../data/traitSynergy';
-import { buildRivalLeagueView } from '../../systems/RivalLeagueSystem';
+import { buildLeaderboardLocalView } from '../../systems/LeaderboardSystem';
 import { getHubDailyDeal } from '../../systems/LodgingShopSystem';
 import { getActiveExpeditionHighlight } from '../../systems/expeditionHighlight';
 
@@ -65,17 +65,11 @@ function partySynergyChips(save: GameSave): string {
   ).join('');
 }
 
-function renderRivalStrip(save: GameSave): string {
-  const view = buildRivalLeagueView(save);
-  const gap = view.mainRivalGap;
-  const gapText = gap > 0
-    ? `<em class="town-hub-gap town-hub-gap--behind">+${gap.toLocaleString()} SP</em>`
-    : gap < 0
-      ? `<em class="town-hub-gap town-hub-gap--ahead">${Math.abs(gap).toLocaleString()} SP 앞</em>`
-      : '<em class="town-hub-gap">동점</em>';
-  return `<button type="button" class="town-hub-line town-hub-line--rival" data-town-sub="rival">
+function renderLeaderboardStrip(save: GameSave): string {
+  const local = buildLeaderboardLocalView(save);
+  return `<button type="button" class="town-hub-line town-hub-line--leaderboard" data-town-sub="leaderboard">
     <span class="town-hub-line-icon" aria-hidden="true">🏆</span>
-    <span class="town-hub-line-copy">이번 주 <strong>#${view.playerRank}</strong> · 라이벌 ${gapText}</span>
+    <span class="town-hub-line-copy">랭킹 · 주간 <strong>${local.playerScore.toLocaleString()} SP</strong> · ${local.daysLeftLabel}</span>
     <span class="town-hub-line-chev" aria-hidden="true">›</span>
   </button>`;
 }
@@ -128,10 +122,10 @@ function renderExpeditionHighlight(save: GameSave): string {
   </div>`;
 }
 
-/** 마을 허브 — 라이벌·특가·시너지·귀환 */
+/** 마을 허브 — 랭킹·특가·시너지·귀환 */
 export function renderTownHubWidgets(save: GameSave, atLodging: boolean): string {
   const parts: string[] = [];
-  parts.push(renderRivalStrip(save));
+  parts.push(renderLeaderboardStrip(save));
   parts.push(renderSynergyStrip(save));
   if (atLodging) {
     const highlight = renderExpeditionHighlight(save);

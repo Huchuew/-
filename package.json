@@ -1,6 +1,6 @@
 {
   "name": "tuduk-tuduk-rpg",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "투닥투닥 RPG - 모험단 성장 시뮬레이션",
   "type": "module",
   "scripts": {
@@ -52,7 +52,8 @@
     "@capacitor/app": "^6.0.3",
     "@capacitor/core": "^6.2.0",
     "@capacitor/haptics": "^6.0.2",
-    "@capacitor/ios": "^6.2.1"
+    "@capacitor/ios": "^6.2.1",
+    "@supabase/supabase-js": "^2.108.2"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",

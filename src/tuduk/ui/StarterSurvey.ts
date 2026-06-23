@@ -31,6 +31,7 @@ import type { EquipRole } from '../types';
 import type { StarterSaveOpts } from '../core/SaveManager';
 import { STARTER_CHAR_IDS } from './StarterSelect';
 import { attachPanelPointerGuard } from '../utils/panelPointerGuard';
+import { checkNicknameAvailable } from '../services/PlayerProfileService';
 
 const ROLE_TAG: Record<EquipRole, string> = {
   tank: '탱커', dps: '딜러', healer: '힐러', bruiser: '브루저', support: '서포트',
@@ -227,9 +228,9 @@ export function showStarterSurvey(
               placeholder="${stationName} 모험단" value="${defaultTeam}" />
           </label>
           <label class="survey-field">
-            <span>대표 닉네임</span>
+            <span>대표 닉네임 <small class="survey-nick-hint">전 서버 유일 · 랭킹 표시명</small></span>
             <input type="text" class="survey-input" id="survey-player-nick" maxlength="10"
-              placeholder="닉네임 입력" value="${defaultNick}" required />
+              placeholder="닉네임 입력" value="${defaultNick}" required autocomplete="off" />
           </label>
         </div>
         <p class="survey-field-error hidden" id="survey-team-error" role="alert"></p>
@@ -297,7 +298,7 @@ export function showStarterSurvey(
     return i > 0 ? SURVEY_STEPS[i - 1]! : null;
   };
 
-  const onSurveyTap = (e: Event) => {
+  const onSurveyTap = async (e: Event) => {
     if (picked) return;
     const target = e.target as HTMLElement;
     if (surveyGuard.consumeScrollGesture(target, e)) return;
@@ -395,6 +396,7 @@ export function showStarterSurvey(
       const teamInput = container.querySelector<HTMLInputElement>('#survey-team-name');
       const nickInput = container.querySelector<HTMLInputElement>('#survey-player-nick');
       const errEl = container.querySelector<HTMLElement>('#survey-team-error');
+      const nextBtn = container.querySelector<HTMLButtonElement>('[data-action="team-next"]');
       const rawTeam = teamInput?.value ?? teamName;
       const rawNick = nickInput?.value ?? playerNick;
       const err = validateTeamIdentity(rawTeam, rawNick);
@@ -406,9 +408,28 @@ export function showStarterSurvey(
         nickInput?.focus();
         return;
       }
-      if (errEl) errEl.classList.add('hidden');
+      if (errEl) {
+        errEl.textContent = '닉네임 확인 중…';
+        errEl.classList.remove('hidden');
+      }
+      if (nextBtn) nextBtn.disabled = true;
       const ids = normalizeTeamIdentity(rawTeam, rawNick, homeStationId);
-      if (!ids.playerNickname) return;
+      if (!ids.playerNickname) {
+        if (nextBtn) nextBtn.disabled = false;
+        return;
+      }
+      const nickCheck = await checkNicknameAvailable(ids.playerNickname);
+      if (!nickCheck.available) {
+        if (errEl) {
+          errEl.textContent = nickCheck.message ?? '이미 사용 중인 닉네임입니다';
+          errEl.classList.remove('hidden');
+        }
+        if (nextBtn) nextBtn.disabled = false;
+        nickInput?.focus();
+        return;
+      }
+      if (errEl) errEl.classList.add('hidden');
+      if (nextBtn) nextBtn.disabled = false;
       teamName = ids.adventureTeamName;
       playerNick = ids.playerNickname;
       step = 'character';

@@ -12,6 +12,8 @@ import { openPrivacyPolicy } from '../../utils/openPrivacy';
 import { showConfirmModal } from '../confirmModal';
 import { bindTap } from '../../utils/bindTap';
 import { hapticLight, setVibrationEnabled } from '../../core/Haptics';
+import { getAdventureTeamName, getPlayerNickname, normalizeTeamIdentity, validateTeamIdentity } from '../../data/starterSurvey';
+import { updatePlayerIdentity } from '../../services/PlayerProfileService';
 import type { PanelHost } from './PanelHost';
 
 function volPct(v: number | undefined, fallback: number): number {
@@ -26,6 +28,22 @@ export function renderSettingsPanel(host: PanelHost, save: GameSave, prefix = ''
 
   host.panelEl.innerHTML = `${prefix}
     <div class="panel-header"><h3>설정</h3><span class="badge">💎 ${save.gems}</span></div>
+    <div class="settings-section profile-settings">
+      <h4>모험단 프로필</h4>
+      <p class="hint">닉네임은 전 서버 유일 · 랭킹에 표시됩니다</p>
+      <label class="survey-field">
+        <span>모험단 이름</span>
+        <input type="text" class="survey-input" id="settings-team-name" maxlength="16"
+          value="${getAdventureTeamName(save)}" />
+      </label>
+      <label class="survey-field">
+        <span>대표 닉네임</span>
+        <input type="text" class="survey-input" id="settings-player-nick" maxlength="10"
+          value="${getPlayerNickname(save)}" autocomplete="off" />
+      </label>
+      <p class="survey-field-error hidden" id="settings-profile-error" role="alert"></p>
+      <button type="button" class="btn-sm gold" id="settings-save-profile">프로필 저장 · 랭킹 반영</button>
+    </div>
     <div class="settings-section stats-panel">
       <h4>플레이 통계</h4>
       <p class="hint">투닥 ${(save.stats.touchCount ?? 0).toLocaleString()}회 · 처치 ${(save.stats.totalKills ?? 0).toLocaleString()} · 전멸 ${save.stats.defeatCount ?? 0}</p>
@@ -154,6 +172,34 @@ export function renderSettingsPanel(host: PanelHost, save: GameSave, prefix = ''
     saveGame(s);
     host.onRefresh();
     host.render();
+  });
+  bindTap(host.panelEl.querySelector('#settings-save-profile'), () => {
+    const teamInput = host.panelEl.querySelector('#settings-team-name') as HTMLInputElement | null;
+    const nickInput = host.panelEl.querySelector('#settings-player-nick') as HTMLInputElement | null;
+    const errEl = host.panelEl.querySelector('#settings-profile-error') as HTMLElement | null;
+    const err = validateTeamIdentity(teamInput?.value ?? '', nickInput?.value ?? '');
+    if (err) {
+      if (errEl) { errEl.textContent = err; errEl.classList.remove('hidden'); }
+      return;
+    }
+    const ids = normalizeTeamIdentity(teamInput?.value ?? '', nickInput?.value ?? '', save.homeStationId);
+    if (!ids.playerNickname) return;
+    if (errEl) errEl.classList.add('hidden');
+    const btn = host.panelEl.querySelector('#settings-save-profile') as HTMLButtonElement | null;
+    if (btn) btn.disabled = true;
+    void updatePlayerIdentity(save, ids.playerNickname, ids.adventureTeamName).then(res => {
+      if (btn) btn.disabled = false;
+      if (res.ok) {
+        audio.playConfirm();
+        host.showToast(res.message, true);
+        saveGame(save);
+        host.onRefresh();
+      } else {
+        audio.playFail();
+        if (errEl) { errEl.textContent = res.message; errEl.classList.remove('hidden'); }
+        host.showToast(res.message, false);
+      }
+    });
   });
   bindTap(host.panelEl.querySelector('#open-privacy'), () => openPrivacyPolicy());
   bindTap(host.panelEl.querySelector('#reset-save'), () => {

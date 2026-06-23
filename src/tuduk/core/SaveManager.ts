@@ -11,7 +11,8 @@ import { normalizeGrade } from '../data/equipGrades';
 import { reconcileFormation } from '../systems/FormationSystem';
 import { GROWTH_NODES } from '../data/growthTrees';
 import { isPrestigeNodeId } from '../data/prestigeBranchBuilder';
-import { ensureRivalLeague } from '../systems/RivalLeagueSystem';
+import { ensureLeaderboardState } from '../systems/LeaderboardSystem';
+import { scheduleProfileSync } from '../services/PlayerProfileService';
 import { PRESTIGE_BRANCH_DEFS } from '../data/prestigeBranchData';
 import { normalizeBagItemSlots, sanitizeEquipment } from '../systems/EquipmentSystem';
 import { COMBAT_HP_SCALE } from '../data/combatBalance';
@@ -224,7 +225,7 @@ export function reconcileSave(save: GameSave): GameSave {
   }
   normalizeBagItemSlots(save);
   reconcileFormation(save);
-  ensureRivalLeague(save);
+  ensureLeaderboardState(save);
   return save;
 }
 
@@ -476,6 +477,7 @@ export function saveGame(save: GameSave): boolean {
   const json = JSON.stringify(save);
   try {
     localStorage.setItem(KEY, json);
+    scheduleProfileSync(save);
     return true;
   } catch {
     saveErrorHandler?.('저장 실패 — 저장 공간을 확인해 주세요');

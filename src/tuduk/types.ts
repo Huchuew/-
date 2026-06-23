@@ -577,7 +577,7 @@ export interface GameSave {
     baseline: Record<string, number>;
     claimed: string[];
   };
-  /** 가상 CPU 길드 주간 랭크 */
+  /** 주간 랭킹 로컬 상태 (일일 미션·주간 SP·보상) */
   rivalLeague?: {
     weekId: string;
     baseline: { maxRegion: number; totalKills: number; achievements: number; touchCount: number };
@@ -585,7 +585,7 @@ export interface GameSave {
     lastRank?: number;
     dailyRankSnapshot?: number;
     dailyRankDay?: string;
-    mainRivalId: string;
+    mainRivalId?: string;
     winStreak?: number;
     seasonWins?: number;
     bonusSp?: number;

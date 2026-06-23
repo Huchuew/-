@@ -2,6 +2,7 @@ import { applyPendingRebirthMarksToSave } from '../systems/RebirthMarkSystem';
 import { showStarterSurvey } from '../ui/StarterSurvey';
 import type { GameSave } from '../types';
 import { bindTap } from '../utils/bindTap';
+import { registerPlayerProfile } from '../services/PlayerProfileService';
 import {
   clearResetToStarterFlag,
   createStarterSave,
@@ -94,6 +95,9 @@ function onStarterPicked(container: HTMLElement, starterId: string, opts?: Start
     applyPendingRebirthMarksToSave(save);
     clearResetToStarterFlag();
     saveGame(save);
+    void registerPlayerProfile(save).then(res => {
+      if (!res.ok) console.warn('[Leaderboard]', res.message);
+    });
     startGame(container, save);
   } catch (err) {
     console.error('starter pick failed', err);
@@ -117,6 +121,9 @@ export function continueBoot(container: HTMLElement) {
       return;
     }
     const save = loadSave()!;
+    void registerPlayerProfile(save).then(res => {
+      if (!res.ok && res.message) console.warn('[Leaderboard]', res.message);
+    });
     startGame(container, save);
   } catch (err) {
     console.error('continueBoot failed', err);
