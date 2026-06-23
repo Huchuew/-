@@ -1,0 +1,21 @@
+Pipoya 32x32 시트에서 우측 방향 1프레임을 잘라 {charId}.png 로 저장하세요.
+mujang.png ← 시트 인덱스 0
+dung.png ← 시트 인덱스 8
+huchu.png ← 시트 인덱스 16
+lesford.png ← 시트 인덱스 24
+ampa.png ← 시트 인덱스 32
+ujang.png ← 시트 인덱스 40
+yujin.png ← 시트 인덱스 48
+seoyoung.png ← 시트 인덱스 49
+teso.png ← 시트 인덱스 50
+horangi.png ← 시트 인덱스 53
+hyesung.png ← 시트 인덱스 54
+isanim.png ← 시트 인덱스 55
+sanjeok.png ← 시트 인덱스 56
+sodia.png ← 시트 인덱스 57
+jimjimi.png ← 시트 인덱스 58
+danjong.png ← 시트 인덱스 59
+hyeoni.png ← 시트 인덱스 60
+pocket.png ← 시트 인덱스 61
+cutie.png ← 시트 인덱스 51
+hidden.png ← 시트 인덱스 52
