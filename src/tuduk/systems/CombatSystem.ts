@@ -72,8 +72,9 @@ export function buildMonsterCombatant(
   mon: MonsterDef,
   hpScale = 1,
   atkScale = hpScale,
+  opts?: { bossHpMult?: number },
 ): CombatEntity {
-  const bossMult = mon.isBoss ? BOSS_HP_MULT : 1;
+  const bossMult = mon.isBoss ? BOSS_HP_MULT * (opts?.bossHpMult ?? 1) : 1;
   const hp = Math.floor(mon.hp * hpScale * COMBAT_HP_SCALE * bossMult);
   return {
     id: mon.id,

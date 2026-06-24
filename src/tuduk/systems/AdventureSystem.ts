@@ -77,6 +77,7 @@ import {
   applyBossGrudgeToDamage, BOSS_HEAL_MULT, getBossGrudgeBonusPct,
   getCombatFatigueMult, regionMonsterAtkScale, regionMonsterAtkSpdMult,
   regionMonsterDefScale, regionMonsterHpScale, regionGrowthPressureMult, regionPlayerHealMult,
+  regionBossHpMult,
   scaleKillExp, scaleKillGold, regionKillGoldScale,
   TOUCH_COOLDOWN_MS, WALK_PHASE_TIME_MULT, WALK_SCROLL_MULT, POTION_HEAL_FLAT,
   POST_KILL_WALK_SEC,
@@ -1722,7 +1723,9 @@ export class AdventureSystem {
       : this.isEliteFight ? ELITE_POWER_MULT : 1;
 
     this.encounterSlots = this.waveMonsters.map((mon, i) => {
-      const entity = buildMonsterCombatant(mon, hpScale * eliteMult, atkScale * eliteMult);
+      const entity = buildMonsterCombatant(mon, hpScale * eliteMult, atkScale * eliteMult, {
+        bossHpMult: regionBossHpMult(region),
+      });
       entity.instanceUid = `${mon.id}_${i}`;
       entity.atk = Math.floor(entity.atk * affix.monAtkMult);
       entity.def = Math.floor(entity.def * affix.monDefMult * regionMonsterDefScale(region)
