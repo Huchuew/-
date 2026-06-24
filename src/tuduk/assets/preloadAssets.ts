@@ -10,6 +10,7 @@ import {
   tinyAssetPath,
 } from '../data/tinyRpgAnim';
 import { LODGING_BG_PATH } from '../systems/LodgingSystem';
+import { RIVAL_DUEL_BG_PATH } from '../render/RivalDuelBackground';
 import type { GameSave } from '../types';
 
 const BATCH = 10;
@@ -39,6 +40,7 @@ function addPackPaths(paths: Set<string>, packId: string, manifest: Awaited<Retu
 function collectPriorityPaths(save: GameSave | undefined, manifest: Awaited<ReturnType<typeof loadTinyRpgManifest>>): string[] {
   const paths = new Set<string>();
   paths.add(LODGING_BG_PATH);
+  paths.add(RIVAL_DUEL_BG_PATH);
   if (save) {
     for (const id of new Set([...save.party, ...save.owned])) {
       const pack = CHAR_TINY_MAP[id] ?? CHAR_MONSTER_PACK[id];
@@ -60,6 +62,7 @@ export async function preloadGameAssets(save?: GameSave): Promise<void> {
   for (const p of stageBackgroundPaths()) all.add(p);
   for (const id of Object.keys(PIPOYA_MONSTER_BINDINGS)) all.add(monsterAssetPath(id));
   all.add(LODGING_BG_PATH);
+  all.add(RIVAL_DUEL_BG_PATH);
 
   const priority = new Set(collectPriorityPaths(save, manifest));
   const rest = [...all].filter(p => !priority.has(p));

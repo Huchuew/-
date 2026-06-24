@@ -35,7 +35,8 @@ export function getWeeklySpireModifier(weekId: string): SpireModifier {
 
 export function getSpireFloorDps(floor: number, weekId: string): number {
   const mod = getWeeklySpireModifier(weekId);
-  const base = 200 + floor * 38 + floor * floor * 1.2;
+  const tier = Math.floor(floor / 10);
+  const base = 180 + floor * 34 + floor * floor * 1.05 + tier * tier * 120;
   return Math.floor(base * mod.dpsMult);
 }
 

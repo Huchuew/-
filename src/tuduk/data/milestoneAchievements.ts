@@ -21,8 +21,6 @@ export const MILESTONE_ACHIEVEMENT_IDS = [
   'potions50',
   'defeat5',
   'all_chars',
-  'rift5',
-  'rift10',
   'spire5',
   'spire10',
   'gems10',

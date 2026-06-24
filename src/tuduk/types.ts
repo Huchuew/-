@@ -13,6 +13,21 @@ export type AdventurePhase = 'walk' | 'encounter' | 'combat' | 'loot' | 'boss' |
 export type GameLocation = 'dungeon' | 'lodging';
 export type GaugeType = 'mana' | 'fury';
 
+export type PlayerMailKind = 'patrol_help' | 'rival_defeat' | 'rival_victory' | 'rival_loss';
+
+export interface PlayerMailEntry {
+  id: string;
+  kind: PlayerMailKind;
+  title: string;
+  body: string;
+  goldReward?: number;
+  read: boolean;
+  claimed: boolean;
+  createdAt: number;
+  fromNickname?: string;
+  fromTeam?: string;
+}
+
 export const MAX_POTION_STOCK = 100;
 /** 원정(던전) 휴대 한도 */
 export const EXPEDITION_POTION_CARRY = 3;
@@ -82,6 +97,10 @@ export interface EncounterSlot {
   /** 10층+ 보스 직전 에픽 */
   isEpic?: boolean;
   spiritGauge?: number;
+  /** 라이벌 격파 — 고스트 캐릭터 스프라이트 */
+  rivalCharId?: string;
+  /** 처치 처리 중복 방지 */
+  defeated?: boolean;
 }
 
 export interface DefeatLog {
@@ -268,6 +287,7 @@ export interface ExpeditionRuntime {
   returnWalkSec?: number;
   phase?: AdventurePhase;
   phaseTimer?: number;
+  isSpireReturnTrip?: boolean;
 }
 
 export interface TycoonState {
@@ -300,10 +320,24 @@ export interface TycoonState {
   supplyBoostMult?: number;
 }
 
+export interface SpireRunState {
+  active: boolean;
+  floor: number;
+  wavesThisFloor: number;
+  weekId: string;
+  /** 도전 시작 시 기록 */
+  startBest?: number;
+  /** 시도권 차감 여부 */
+  attemptCharged?: boolean;
+  /** 이번 도전에서 심핵 지급한 층 */
+  essenceFloors?: number[];
+}
+
 export interface EndgameState {
-  riftCleared: number;
-  riftKeys: number;
-  riftKeysDay: string;
+  /** @deprecated 차원 균열 — 제거됨, 세이브 호환용 */
+  riftCleared?: number;
+  riftKeys?: number;
+  riftKeysDay?: string;
   spireBest: number;
   spireWeek: string;
   spireWeekBest: number;
@@ -311,6 +345,8 @@ export interface EndgameState {
   spireAttemptsDay: string;
   relics: string[];
   ascended: string[];
+  /** 주간 미션 전부 클리어 시 심핵 1개 보장 */
+  weeklyEssenceWeek?: string;
 }
 
 export type ShopBattleBuffKind =
@@ -481,8 +517,12 @@ export interface GameSave {
     /** 주간 미션 — 일일 대결 클리어 누적 */
     rivalDailyClears?: number;
   };
-  /** 엔드게임 (차원 균열·무한의 탑·유물·각성) */
+  /** 엔드게임 (무한의 탑·유물·각성) */
   endgame?: EndgameState;
+  /** 25/35/45층 1회성 마일스톤 수령 */
+  floorMilestones?: number[];
+  /** 야탑 스크롤 전투 런 */
+  spireRun?: SpireRunState;
   /** 숙소 벽보 — 랜덤 용사 영입 */
   bulletin?: {
     heroIds: string[];
@@ -516,9 +556,12 @@ export interface GameSave {
   dungeonShortcuts?: {
     floors: Record<string, { ready?: boolean; developingUntil?: number }>;
     clearCounts?: Record<string, number>;
+    pinnedFloor?: number;
   };
   /** 모험 캠프 시설 */
   camp?: {
+    lumber_millLevel?: number;
+    lumber_millLastTick?: number;
     mineLevel: number;
     mineLastTick: number;
     labLevel: number;
@@ -549,6 +592,12 @@ export interface GameSave {
     watchtowerLastTick?: number;
     workshopLastTick?: number;
     springLastTick?: number;
+    spirit_loomLevel?: number;
+    spirit_loomLastTick?: number;
+    legend_forgeLevel?: number;
+    legend_forgeLastTick?: number;
+    void_cauldronLevel?: number;
+    void_cauldronLastTick?: number;
     /** v5.1 마이그레이션용 */
     lastTick?: number;
   };
@@ -571,12 +620,40 @@ export interface GameSave {
     at: number;
     dismissed?: boolean;
   };
-  /** 주간 미션 진행 (시즌 주차별) */
+  /** 전설 장신구 드랍 축하 연출 대기 */
+  pendingAccessoryCelebrate?: { name: string; grade: string };
   weeklyMissions?: {
     weekId: string;
     baseline: Record<string, number>;
     claimed: string[];
   };
+  /** 라이벌 격파 — 일일 비동기 대결 */
+  rivalDuel?: {
+    dayKey: string;
+    attempts: number;
+    wins: number;
+    lastRivalId?: string;
+  };
+  /** 일회성 테스트용 격파 횟수 리셋 플래그 */
+  rivalDuelTestReset?: boolean;
+  rivalDuelTestResetV2?: boolean;
+  /** @deprecated 레거시 세이브 호환 */
+  patrolSupport?: {
+    dayKey: string;
+    used: number;
+  };
+  /** 라이벌 격파 원정 세션 */
+  rivalDuelRun?: {
+    rivalPlayerId: string;
+    nickname: string;
+    teamName: string;
+    maxRegion: number;
+    partyDps: number;
+    partyElites: { charId: string; level: number; name: string }[];
+    active: boolean;
+  };
+  /** 플레이어 메일함 (격파 알림) */
+  playerMail?: PlayerMailEntry[];
   /** 주간 랭킹 로컬 상태 (일일 미션·주간 SP·보상) */
   rivalLeague?: {
     weekId: string;

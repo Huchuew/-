@@ -1,24 +1,22 @@
-import type { GameSave } from '../types';
+import type { GameSave, CharState } from '../types';
 import { CHAR_MAP } from '../data/characters';
-import { GROWTH_NODES } from '../data/growthTrees';
 import { ensureEndgame, isEndgameUnlocked } from './EndgameSystem';
+import { getPrestigeMilestoneInfo } from './GrowthSystem';
 import { saveGame } from '../core/SaveManager';
 
 const ASCEND_MIN_LEVEL = 80;
-const ASCEND_MIN_RIFT = 8;
-const ASCEND_GOLD = 250_000;
-const ASCEND_VOID = 25;
-const ASCEND_CRYSTAL = 3;
+const ASCEND_MIN_SPIRE_BEST = 30;
+const ASCEND_GOLD = 480_000;
+const ASCEND_LEGEND_SCALE = 10;
+const ASCEND_VOID = 20;
+const ASCEND_SPIRE_ESSENCE = 4;
 
-export function hasPrestigeComplete(st: { unlockedNodes: string[] }, charId: string): boolean {
-  const prNodes = GROWTH_NODES.filter(n => n.charId === charId && n.id.includes('_pr_'));
-  if (!prNodes.length) return true;
-  const final = prNodes[prNodes.length - 1]!;
-  return st.unlockedNodes.includes(final.id);
+export function hasPrestigeComplete(st: CharState, charId: string): boolean {
+  return getPrestigeMilestoneInfo(st, charId)?.allDone ?? false;
 }
 
 export function canAscend(save: GameSave, charId: string): { ok: boolean; reason?: string } {
-  if (!isEndgameUnlocked(save)) return { ok: false, reason: '엔드 콘텐츠 해금 필요' };
+  if (!isEndgameUnlocked(save)) return { ok: false, reason: '야탑 해금 조건 미달 (18층 정복)' };
   if (!save.owned.includes(charId)) return { ok: false, reason: '미보유 캐릭터' };
   ensureEndgame(save);
   if (save.endgame!.ascended.includes(charId)) return { ok: false, reason: '이미 각성 완료' };
@@ -30,17 +28,20 @@ export function canAscend(save: GameSave, charId: string): { ok: boolean; reason
     return { ok: false, reason: `레벨 ${ASCEND_MIN_LEVEL} 이상 필요 (현재 ${st.level})` };
   }
   if (!hasPrestigeComplete(st, charId)) {
-    return { ok: false, reason: '전직 트리 최종 노드 습득 필요' };
+    return { ok: false, reason: '4차 전직 완료 필요' };
   }
-  if (save.endgame!.riftCleared < ASCEND_MIN_RIFT) {
-    return { ok: false, reason: `차원 균열 ${ASCEND_MIN_RIFT}층 이상 필요` };
+  if (save.endgame!.spireBest < ASCEND_MIN_SPIRE_BEST) {
+    return { ok: false, reason: `야탑 ${ASCEND_MIN_SPIRE_BEST}층 기록 필요 (현재 ${save.endgame!.spireBest}층)` };
   }
   if (save.gold < ASCEND_GOLD) return { ok: false, reason: `골드 ${ASCEND_GOLD.toLocaleString()} 필요` };
+  if ((save.materials.legend_scale ?? 0) < ASCEND_LEGEND_SCALE) {
+    return { ok: false, reason: `전설 비늘 ×${ASCEND_LEGEND_SCALE} 필요` };
+  }
   if ((save.materials.void_shard ?? 0) < ASCEND_VOID) {
     return { ok: false, reason: `공허 파편 ×${ASCEND_VOID} 필요` };
   }
-  if ((save.materials.rift_crystal ?? 0) < ASCEND_CRYSTAL) {
-    return { ok: false, reason: `균열 결정 ×${ASCEND_CRYSTAL} 필요` };
+  if ((save.materials.spire_essence ?? 0) < ASCEND_SPIRE_ESSENCE) {
+    return { ok: false, reason: `탑의 심핵 ×${ASCEND_SPIRE_ESSENCE} 필요 (야탑 30층+ 클리어)` };
   }
   return { ok: true };
 }
@@ -51,8 +52,9 @@ export function attemptAscension(save: GameSave, charId: string): { ok: boolean;
 
   ensureEndgame(save);
   save.gold -= ASCEND_GOLD;
+  save.materials.legend_scale = (save.materials.legend_scale ?? 0) - ASCEND_LEGEND_SCALE;
   save.materials.void_shard = (save.materials.void_shard ?? 0) - ASCEND_VOID;
-  save.materials.rift_crystal = (save.materials.rift_crystal ?? 0) - ASCEND_CRYSTAL;
+  save.materials.spire_essence = (save.materials.spire_essence ?? 0) - ASCEND_SPIRE_ESSENCE;
   save.endgame!.ascended.push(charId);
 
   const st = save.chars[charId]!;
@@ -64,5 +66,5 @@ export function attemptAscension(save: GameSave, charId: string): { ok: boolean;
 }
 
 export function getAscensionCostText(): string {
-  return `🪙${ASCEND_GOLD.toLocaleString()} · 공허×${ASCEND_VOID} · 결정×${ASCEND_CRYSTAL} · Lv.${ASCEND_MIN_LEVEL}+ · 균열 ${ASCEND_MIN_RIFT}층+`;
+  return `🪙${ASCEND_GOLD.toLocaleString()} · 비늘×${ASCEND_LEGEND_SCALE} · 공허×${ASCEND_VOID} · 심핵×${ASCEND_SPIRE_ESSENCE} · Lv.${ASCEND_MIN_LEVEL}+ · 야탑 ${ASCEND_MIN_SPIRE_BEST}층+ · 25/30/35/40층·주간미션`;
 }

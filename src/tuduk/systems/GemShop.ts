@@ -18,6 +18,7 @@ export const GEM_COST = {
   dispatchRush: 8,
   materialCrate: 10,
   augmentRerollAll: 100,
+  nicknameChange: 15,
 } as const;
 
 const SPEED_BOOST_GEM_MS = 30 * 60 * 1000;

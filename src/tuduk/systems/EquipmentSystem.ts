@@ -3,7 +3,7 @@ import {
   RECIPE_MAP, canCharUseRecipe, enhanceBonus, enhanceCost as baseEnhanceCost, type EquipRecipe,
 } from '../data/equipment';
 import { normalizeGrade } from '../data/equipGrades';
-import { findRecipeLine, getNextCraftRecipeId, isPrevTierMaxEnhanced } from '../data/equipmentProgress';
+import { findRecipeLine, getItemForCharSlot, getNextCraftRecipeId, isPrevTierMaxEnhanced } from '../data/equipmentProgress';
 import { getMaxEnhanceForGrade } from '../data/equipment';
 import { getAwakenBonus } from './equipAwakening';
 import { getSmelterEnhanceDiscount } from './TycoonSystem';
@@ -162,9 +162,14 @@ export function craftItem(save: GameSave, recipeId: string, charId: string): Cra
   for (const [mat, n] of Object.entries(r.materials)) {
     save.materials[mat] = (save.materials[mat] ?? 0) - n;
   }
+  const prevItem = getItemForCharSlot(save, charId, r.slot);
+  const carriedAwaken = prevItem?.grade === 'ur' && (prevItem.awakenLevel ?? 0) >= 3 ? 1 : 0;
   upgradeReplaceLowerTiers(save, charId, recipeId);
   const uid = newItemUid();
-  save.bag.push({ uid, id: r.id, grade: r.grade, slot: r.slot, level: 0 });
+  save.bag.push({
+    uid, id: r.id, grade: r.grade, slot: r.slot, level: 0,
+    ...(carriedAwaken > 0 ? { awakenLevel: carriedAwaken } : {}),
+  });
   equipItem(save, charId, uid);
   return 'success';
 }

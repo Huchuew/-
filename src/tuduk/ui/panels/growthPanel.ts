@@ -8,7 +8,7 @@ import { PRESTIGE_FORK_META } from '../../data/prestigeBranchForks';
 import { PRESTIGE_TIER_LEVELS } from '../../data/prestigeJobBalance';
 import { getCharGrowth, getNodeBonusWithSkill } from '../../data/growthTrees';
 import {
-  canAttemptLearn, formatPityBonus, getActivePrestigePath, getCharGrowthTrees, getGrowthFails,
+  canAttemptLearn, formatPityBonus, getPityHint, getActivePrestigePath, getCharGrowthTrees, getGrowthFails,
   getGrowthLineProgress, getLearnRate, isNodeLocked, isNodeOwned, nodeMatchesActivePath,
 } from '../../systems/GrowthSystem';
 import { isCharGrowthBlocked } from '../../systems/PrestigeGateSystem';
@@ -131,6 +131,7 @@ export function renderSkillSpotlight(
         <p class="skill-spotlight-bonus">${getNodeBonusWithSkill(node)}</p>
         <p class="hint">필요 Lv.${node.reqLevel}${matLine ? ` · ${matLine}` : ''}</p>
         <p class="hint">성공률 ${Math.round(rate * 100)}%${fails > 0 ? ` · 실패 ${fails}회 ${formatPityBonus(fails)}` : ''}</p>
+        <p class="hint pity-hint">🎯 ${getPityHint(st, node)}</p>
       </div>
     </div>
     <div class="skill-spotlight-action">

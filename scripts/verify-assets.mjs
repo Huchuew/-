@@ -32,6 +32,7 @@ const STAGE_BACKGROUNDS = [
   'assets/backgrounds/18_swamp.png',
   'assets/backgrounds/19_ice_cave.png',
   'assets/backgrounds/20_floating_islands.png',
+  'assets/backgrounds/rival_colosseum.png',
 ];
 
 const LODGING_UI = [

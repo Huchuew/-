@@ -483,6 +483,29 @@ export class AudioManager {
     setTimeout(() => this.se('Saint2.ogg', 0.12, 1.15), 220);
   }
 
+  /** 전설 각성 — 다층 SE 연출 */
+  playAscension(charId?: string) {
+    this.se('Saint3.ogg', 0.22, 0.95);
+    setTimeout(() => this.se('Magic10.ogg', 0.28, 1.15), 120);
+    setTimeout(() => this.se('Skill3.ogg', 0.32, 1.2), 240);
+    setTimeout(() => this.se('Flash1.ogg', 0.3, 1.35), 360);
+    setTimeout(() => this.se('Saint1.ogg', 0.26, 1.4), 520);
+    setTimeout(() => this.se('Coin.ogg', 0.2, 1.5), 680);
+    if (charId) {
+      setTimeout(() => this.playPrestigeJobChange(charId, 3), 400);
+    }
+  }
+
+  /** 전설 장신구 드랍 */
+  playLegendaryDrop() {
+    this.se('Coin.ogg', 0.26, 1.3);
+    setTimeout(() => this.se('Magic10.ogg', 0.3, 1.2), 80);
+    setTimeout(() => this.se('Saint2.ogg', 0.24, 1.25), 180);
+    setTimeout(() => this.se('Flash1.ogg', 0.28, 1.4), 300);
+    setTimeout(() => this.se('Skill3.ogg', 0.22, 1.35), 450);
+    setTimeout(() => this.se('Saint3.ogg', 0.2, 1.5), 600);
+  }
+
 
 
   /** @deprecated playCharAttack */

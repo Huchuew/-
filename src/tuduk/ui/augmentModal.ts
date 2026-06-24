@@ -68,7 +68,16 @@ export function showAugmentPickModal(
   overlay.id = 'augment-pick-modal';
   overlay.className = 'augment-pick-modal';
   overlay.innerHTML = `
-    <div class="augment-pick-bg" aria-hidden="true"></div>
+    <div class="augment-pick-scene" aria-hidden="true">
+      <div class="augment-pick-bg"></div>
+      <div class="augment-pick-rays"></div>
+      <div class="augment-pick-glow"></div>
+      <div class="augment-pick-ring"></div>
+      <div class="augment-pick-dust">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
     <div class="augment-pick-vignette" aria-hidden="true"></div>
     <div class="augment-pick-panel" role="dialog" aria-modal="true" aria-labelledby="augment-pick-title">
       <header class="augment-pick-head">

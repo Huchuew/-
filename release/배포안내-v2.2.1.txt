@@ -1,0 +1,110 @@
+투닥투닥RPG v2.2.1 배포 안내
+================================
+
+■ 이번 패치 요약
+  - 시즌 랭킹 리밸런스 (최고 기록 17층, 야탑 미반영)
+  - 골드 밸런스 조정 (초·중반 강화 비용)
+  - 출시 QA (오프라인 중복 방지, NaN 가드, 전투 루프·저장 안정화)
+  - PWA 아이콘·GitHub Pages 상대 경로 대응
+  - HUD·야탑·닉네임·목제소·각성·라이벌 결투 등 UI/기능 패치
+
+■ 표시 버전
+  설정(⚙️) 하단: v2.2.1 · 후추랩
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 1) GitHub Desktop으로 배포 (권장)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [커밋 전 확인]
+  ✓ .env.local 은 커밋하지 마세요 (Supabase service_role 키 포함 금지)
+  ✓ .env.example 만 올려도 됩니다 (placeholder만)
+  ✓ VITE_SPIRE_TEST_UNLOCK 은 배포용 .env / Secrets 에 넣지 않음
+    (18층 없이 야탑 테스트는 로컬 개발 전용)
+
+  [GitHub Desktop]
+  1. Changes 탭에서 변경 파일 확인 (113개 등)
+  2. Summary 예시:
+     v2.2.1 패치 — 시즌 랭킹·골드·출시 QA
+  3. Description (선택):
+     - 랭킹 17층 시즌 캡·DB 정규화
+     - 골드 밸런스·오프라인/저장 안정화
+     - PWA·Pages 배포 준비
+  4. 「Commit to main」
+  5. 상단 「Push origin」 (또는 Fetch 후 Push)
+
+  [GitHub Actions 자동 빌드·배포]
+  - push 하면 워크플로 「Deploy to GitHub Pages」 실행
+  - 저장소 → Actions 탭 → 초록 체크 확인 (약 2~4분)
+  - 실패 시 로그에서 npm run build 오류 확인
+
+  [GitHub Pages 최초 설정 (한 번만)]
+  - 저장소 → Settings → Pages
+  - Source: Deploy from a branch
+  - Branch: gh-pages / root
+  - Save
+
+  [접속 URL]
+  - 프로젝트 사이트: https://<GitHub아이디>.github.io/<저장소이름>/
+  - 예: 저장소가 username/tuduk-rpg 이면
+    https://username.github.io/tuduk-rpg/
+  - Settings → Pages 에서 실제 URL 확인
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 2) GitHub Secrets (랭킹 서버)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  저장소 → Settings → Secrets and variables → Actions
+
+  | 이름                    | 값                          |
+  |-------------------------|-----------------------------|
+  | VITE_SUPABASE_URL       | https://xxxx.supabase.co    |
+  | VITE_SUPABASE_ANON_KEY  | anon (public) 키            |
+
+  ※ service_role 키는 Secrets 에 넣지 마세요 (서버 관리용, 유출 위험)
+  ※ DB 일괄 수정: 로컬에서 node scripts/leaderboard-admin-nerf.mjs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 3) 배포 후 스모크 테스트 (5분)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  □ 첫 화면·스플래시 → 캐릭터 선택/로드 정상 (흰 화면 없음)
+  □ 전투·투닥·강화 1회
+  □ 설정 하단 v2.2.1 표시
+  □ iPhone Safari → 홈 화면 추가 (PWA)
+  □ 잭펍 랭킹 탭 → ↻ 새로고침 (Supabase 연결 시)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 4) 로컬에서 미리 빌드만 확인할 때
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  cd 프로젝트 폴더
+  npm run build
+  npm run preview
+  → http://localhost:5200
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 5) Android APK (지인 배포 — 선택)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  npm run release:apk
+  → release\투닥투닥RPG.apk
+  ※ APK 버전은 android/app/build.gradle 별도 — 웹 2.2.1 과 다를 수 있음
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 6) Netlify (기존 링크 쓸 때)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  npm run build
+  dist 폴더 안 내용 전체를 Netlify Deploys 에 드래그
+  (zip 말고 index.html·assets·manifest 가 루트에 오게)
+
+  기존 링크: https://resplendent-fairy-4505a4.netlify.app
+  → GitHub Pages 로 옮기면 이 링크는 갱신 안 됨. 새 URL 공유 필요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 문제 해결
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  • 흰 화면: F12 콘솔 오류 / index.html 이 ./assets/... 인지 확인
+  • 랭킹 미연결: Actions Secrets · Supabase URL/anon 키 확인
+  • 캐시: Safari 시크릿 또는 강력 새로고침 (PWA는 삭제 후 재추가)

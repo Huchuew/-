@@ -56,6 +56,7 @@ export const MATERIAL_LABELS: Record<string, string> = {
   healing_herb: '치유 약초',
   void_shard: '공허 파편',
   rift_crystal: '균열 결정',
+  spire_essence: '탑의 심핵',
 };
 
 const BUFFER_JOBS: JobClass[] = ['buffer_atk', 'buffer_spd', 'buffer_crit', 'buffer_exp'];
@@ -202,8 +203,9 @@ export function enhanceCost(level: number, grade: EquipGrade): { gold: number; m
   const gradeMult = ENHANCE_MULT[grade];
   const costMult = 1 + (gradeMult - 1) * (gi >= 5 ? 0.52 : 0.35);
   const tierScale = 1 + level * (gi >= 5 ? 0.12 : 0.08);
+  const goldBase = gi >= 5 && gi <= 7 ? 7_500 : 8_800;
   const gold = Math.floor(
-    8_800 * (level + 1) * costMult * tierScale * (1 + level * 0.045) * earlyEnhanceGoldMult(level, grade),
+    goldBase * (level + 1) * costMult * tierScale * (1 + level * 0.045) * earlyEnhanceGoldMult(level, grade),
   );
   const iron = 1 + level + (gi >= 5 ? 1 : 0);
   if (level >= 2 && gi >= 4) {

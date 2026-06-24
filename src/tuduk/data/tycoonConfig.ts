@@ -87,8 +87,8 @@ export interface CampZoneDef {
 export const CAMP_ZONES: CampZoneDef[] = [
   {
     id: 'forest', name: '약초 숲', icon: '🌲', unlockRegion: 6, cost: 3500,
-    desc: '약초원 생산 +12%',
-    bonuses: { herb: 0.12 },
+    desc: '약초원·목제소 생산 +12%',
+    bonuses: { herb: 0.12, lumber_mill: 0.12 },
   },
   {
     id: 'quarry', name: '심층 광맥', icon: '⛰️', unlockRegion: 9, cost: 9500,

@@ -64,8 +64,8 @@ export function allBiomeAssetPaths(): string[] {
 }
 
 export function biomeForRegion(regionId: number): BiomeDef {
-  const found = BIOME_CYCLE.find(b => b.regionId === regionId);
-  return found ?? BIOME_CYCLE[0]!;
+  const idx = (Math.max(1, regionId) - 1) % BIOME_CYCLE.length;
+  return BIOME_CYCLE[idx]!;
 }
 
 export function nextBiome(biome: BiomeDef): BiomeDef {

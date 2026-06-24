@@ -6,7 +6,7 @@ import { getReadinessGradeInfo, getRequiredPartySize, isLateGameFloor, LATE_GAME
 import { isEpicClearedForFloor } from './partyExpeditionMods';
 import { getGrowthRecommendation } from './RecommendGrowth';
 import { getPartyDps, getRegionAvgDef } from './StatCalculator';
-import { isEndgameUnlocked, getEndgameLockHint } from './EndgameSystem';
+import { isEndgameUnlocked, getEndgameLockHint, getEndgameTeaserLore, isEndgameTeaserVisible } from './EndgameSystem';
 
 export type ReadinessGrade = 'critical' | 'low' | 'ok' | 'ready';
 
@@ -116,6 +116,13 @@ export function getNextPlayerAction(save: GameSave, regionId = save.currentRegio
     }
   }
 
+  if (isEndgameUnlocked(save)) {
+    return { icon: '🗼', label: '야탑 도전', detail: '무한의 탑 · 유물 · 각성', tab: 'town', townSub: 'endgame' };
+  }
+  if (isEndgameTeaserVisible(save)) {
+    return { icon: '🗼', label: '야탑의 문', detail: getEndgameTeaserLore(save), tab: 'town', townSub: 'endgame' };
+  }
+
   const dps = getPartyDps(save, getRegionAvgDef(regionId));
   if (dps < regionId * 28) {
     return { icon: '⚔️', label: '화력 부족', detail: '성장·장비 강화 후 보스 도전', tab: 'growth' };
@@ -125,7 +132,10 @@ export function getNextPlayerAction(save: GameSave, regionId = save.currentRegio
 }
 
 export function getEndgameUnlockHint(save: GameSave): string {
-  if (isEndgameUnlocked(save)) return '엔드게임 해금! [마을·차원]에서 균열·탑·유물·각성 도전';
+  if (isEndgameUnlocked(save)) return '야탑 해금! [마을·야탑]에서 무한의 탑·유물·각성 도전';
+  if (isEndgameTeaserVisible(save)) {
+    return getEndgameTeaserLore(save);
+  }
   const hint = getEndgameLockHint(save);
-  return hint ? `엔드게임 해금: ${hint}` : '';
+  return hint ? `야탑 해금: ${hint}` : '';
 }

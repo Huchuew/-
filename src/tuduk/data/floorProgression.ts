@@ -4,13 +4,16 @@ import { formatReadinessHint } from './lateGameBalance';
 
 /** 층별 권장 레벨 (UI·준비도 힌트용 — 입장 차단 없음) */
 export function getMinLevelForFloor(regionId: number): number {
-  const r = Math.max(1, Math.min(18, regionId));
+  const r = Math.max(1, Math.min(50, regionId));
   if (r === 1) return 1;
   if (r <= 4) return 6 + (r - 1) * 10;
   if (r <= 8) return 42 + (r - 4) * 20;
   if (r <= 12) return 122 + (r - 8) * 24;
   if (r <= 16) return 218 + (r - 12) * 32;
-  return 346 + (r - 16) * 42;
+  if (r <= 18) return 346 + (r - 16) * 42;
+  if (r <= 30) return 430 + (r - 18) * 28;
+  if (r <= 40) return 766 + (r - 30) * 38;
+  return 1146 + (r - 40) * 48;
 }
 
 /** 층별 권장 전직 (힌트용) */
@@ -18,7 +21,9 @@ export function getMinPrestigeForFloor(regionId: number): number {
   if (regionId <= 6) return 0;
   if (regionId <= 10) return 1;
   if (regionId <= 14) return 2;
-  return 3;
+  if (regionId <= 22) return 3;
+  if (regionId <= 35) return 4;
+  return 5;
 }
 
 export interface FloorGateResult {

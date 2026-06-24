@@ -4,7 +4,7 @@ import type { GameSave } from '../types';
 export const RECRUIT_BASE_MULT = 0.16;
 
 /** 보유 인원당 가격 급등 (2명째부터 지수 상승) */
-export const RECRUIT_ROSTER_EXP = 2.65;
+export const RECRUIT_ROSTER_EXP = 2.35;
 
 /** 숙소 상점 회복 포션 (고정가) */
 export const SHOP_POTION_GOLD = 108_000;

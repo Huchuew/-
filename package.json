@@ -1,6 +1,6 @@
 {
   "name": "tuduk-tuduk-rpg",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "투닥투닥 RPG - 모험단 성장 시뮬레이션",
   "type": "module",
   "scripts": {

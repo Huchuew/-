@@ -11,6 +11,11 @@ export function getCharNameYRatio(charId: string): number {
 /** HP·게이지 바 — 발에서 위로 (낮을수록 발 쪽, 스프라이트 겹침↓) */
 export const CHAR_BAR_Y_RATIO = 0.11;
 
+/** 결투장 PvP — HP바·이름을 스프라이트 머리 위로 분리 */
+export const RIVAL_DUEL_BAR_Y_RATIO = 0.58;
+export const RIVAL_DUEL_NAME_Y_RATIO = 0.72;
+export const RIVAL_DUEL_BAR_WIDTH_RATIO = 0.50;
+
 /** 전투·이동 공통 — 발 Y를 canvasH 비율만큼 위로 */
 export const CHAR_FOOT_LIFT_RATIO = 0.032;
 

@@ -62,12 +62,12 @@ function a(
 }
 
 export const AUGMENTS: AugmentDef[] = [
-  a('emergency_kit', '응급 키트', '💊', 'silver', 'survival', '포션 회복량 +25%', { potionHealMult: 1.25 }),
-  a('concentrated_potion', '고농축 포션', '🧪', 'gold', 'survival', '포션 회복량 +50%', { potionHealMult: 1.5 }, { minFloor: 5, exclusiveGroup: 'potion_heal' }),
-  a('alchemist_secret', '연금술사의 비법', '⚗️', 'prism', 'survival', '포션 회복 ×2.5', { potionHealMult: 2.5 }, { minFloor: 12, exclusiveGroup: 'potion_heal' }),
-  a('extra_pocket', '여분 주머니', '👝', 'silver', 'survival', '원정 휴대 포션 +1 (4개)', { expeditionCarryAdd: 1 }, { exclusiveGroup: 'potion_carry' }),
-  a('large_bag', '대용량 가방', '🎒', 'gold', 'survival', '원정 휴대 포션 +3 (6개)', { expeditionCarryAdd: 3 }, { minFloor: 6, exclusiveGroup: 'potion_carry' }),
-  a('endless_flask', '무한 약병', '🫙', 'prism', 'survival', '휴대 상한 8개 · 회복량 −20%', { expeditionCarryCap: 8, potionHealPenalty: 0.8 }, { minFloor: 12, exclusiveGroup: 'potion_carry' }),
+  a('emergency_kit', '응급 키트', '💊', 'silver', 'survival', '포션 회복량 +55%', { potionHealMult: 1.55 }),
+  a('concentrated_potion', '고농축 포션', '🧪', 'gold', 'survival', '포션 회복량 +95%', { potionHealMult: 1.95 }, { minFloor: 5, exclusiveGroup: 'potion_heal' }),
+  a('alchemist_secret', '연금술사의 비법', '⚗️', 'prism', 'survival', '포션 회복 ×3.8', { potionHealMult: 3.8 }, { minFloor: 12, exclusiveGroup: 'potion_heal' }),
+  a('extra_pocket', '여분 주머니', '👝', 'silver', 'survival', '원정 휴대 포션 +2 (5개)', { expeditionCarryAdd: 2 }, { exclusiveGroup: 'potion_carry' }),
+  a('large_bag', '대용량 가방', '🎒', 'gold', 'survival', '원정 휴대 포션 +4 (7개)', { expeditionCarryAdd: 4 }, { minFloor: 6, exclusiveGroup: 'potion_carry' }),
+  a('endless_flask', '무한 약병', '🫙', 'prism', 'survival', '휴대 상한 10개 · 회복량 +15%', { expeditionCarryCap: 10, potionHealMult: 1.15 }, { minFloor: 12, exclusiveGroup: 'potion_carry' }),
   a('after_battle_rest', '전투 후 응급', '💚', 'silver', 'survival', '웨이브 클리어 시 파티 HP 3% 회복', { waveHealPct: 0.03 }),
   a('lodging_blessing', '숙소의 축복', '🛏️', 'gold', 'survival', '숙소 휴식 속도 +35% · 귀환 HP +15%', { restSpeedMult: 1.35, returnHealBonus: 0.15 }, { minFloor: 4 }),
 
@@ -118,7 +118,7 @@ export const AUGMENTS: AugmentDef[] = [
   a('shortcut_pioneer', '숏컷 개척자', '🗺️', 'silver', 'economy', '층 숏컷 개발 시간 −20%', { shortcutDevMult: 0.8 }),
   a('treasure_hunt', '보물 탐색', '🎁', 'gold', 'economy', '보물상자 확률 +6%p · 골드 +25%', { chestChanceAdd: 0.06, chestGoldMult: 1.25 }, { minFloor: 5 }),
 
-  a('second_wind', '제2의 바람', '🌬️', 'silver', 'survival', '웨이브 클리어 HP +2% · 포션 +10%', { waveHealPct: 0.02, potionHealMult: 1.1 }),
+  a('second_wind', '제2의 바람', '🌬️', 'silver', 'survival', '웨이브 클리어 HP +4% · 포션 +35%', { waveHealPct: 0.04, potionHealMult: 1.35 }),
   a('bruiser_rampage', '브루저 광폭', '💢', 'gold', 'role', '브루저·딜러 ATK +8% · HP +6%', { dpsAtkMult: 1.08, tankHpMult: 1.06 }, {
     minFloor: 6,
     condition: s => countRole(s, 'bruiser') + countRole(s, 'dps') >= 2,

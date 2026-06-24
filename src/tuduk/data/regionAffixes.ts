@@ -1,4 +1,5 @@
 import type { ElementType } from '../types';
+import { getDeepFloorArc } from './regionArcs';
 
 export interface RegionAffix {
   id: string;
@@ -101,6 +102,35 @@ export function getWeeklyAffixLabel(): string {
 
 export function getRegionAffix(regionId: number): RegionAffix {
   if (regionId <= 2) return AFFIX_POOL[0]!;
+
+  const arc = getDeepFloorArc(regionId);
+  if (arc) {
+    const base = AFFIX_POOL.find(a => a.id === arc.affixId) ?? AFFIX_POOL[0]!;
+    const tier = (regionId - 18) * 0.85;
+    const atkBoost = 1 + tier * 0.032;
+    const defBoost = 1 + tier * 0.026;
+    const poison = base.poisonTick ?? { dmg: 4 + tier * 1.8, interval: 2.3 };
+    return {
+      ...base,
+      name: `${arc.name} · ${base.name}`,
+      desc: `${arc.lore} · ${base.desc}`,
+      monAtkMult: base.monAtkMult * atkBoost,
+      monDefMult: base.monDefMult * defBoost,
+      monSpdMult: base.monSpdMult * (1 + tier * 0.018),
+      healMult: Math.max(0.72, base.healMult - tier * 0.016),
+      aggroVolatility: base.aggroVolatility * (1 + tier * 0.03),
+      spawnBonus: base.spawnBonus + 0.04,
+      ...(base.poisonTick || poison
+        ? {
+          poisonTick: {
+            dmg: Math.floor((base.poisonTick?.dmg ?? poison.dmg) * (1 + tier * 0.2) + regionId * 0.3),
+            interval: Math.max(1.2, (base.poisonTick?.interval ?? poison.interval) - tier * 0.05),
+          },
+        }
+        : {}),
+    };
+  }
+
   const weekIdx = getWeeklyAffixIndex();
   const base = AFFIX_POOL[(regionId - 1 + weekIdx) % AFFIX_POOL.length]!;
   if (regionId < 10) return base;

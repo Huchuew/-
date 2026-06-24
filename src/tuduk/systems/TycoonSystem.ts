@@ -24,6 +24,8 @@ export function canProduceLabPotions(save: GameSave): boolean {
 }
 
 export interface CampState {
+  lumber_millLevel: number;
+  lumber_millLastTick: number;
   mineLevel: number;
   mineLastTick: number;
   labLevel: number;
@@ -54,6 +56,12 @@ export interface CampState {
   watchtowerLastTick: number;
   workshopLastTick: number;
   springLastTick: number;
+  spirit_loomLevel: number;
+  spirit_loomLastTick: number;
+  legend_forgeLevel: number;
+  legend_forgeLastTick: number;
+  void_cauldronLevel: number;
+  void_cauldronLastTick: number;
 }
 
 const TICK_CHECK_MS = 800;
@@ -62,6 +70,7 @@ const MAX_OFFLINE_MS = 12 * 3_600_000;
 function defaultCamp(): CampState {
   const now = Date.now();
   return {
+    lumber_millLevel: 0, lumber_millLastTick: now,
     mineLevel: 0, mineLastTick: now,
     labLevel: 0, labLastTick: now,
     herbLevel: 0, herbLastTick: now,
@@ -73,6 +82,9 @@ function defaultCamp(): CampState {
     watchtowerLevel: 0, workshopLevel: 0, springLevel: 0,
     trainingLastTick: now, armoryLastTick: now, libraryLastTick: now, shrineLastTick: now,
     watchtowerLastTick: now, workshopLastTick: now, springLastTick: now,
+    spirit_loomLevel: 0, spirit_loomLastTick: now,
+    legend_forgeLevel: 0, legend_forgeLastTick: now,
+    void_cauldronLevel: 0, void_cauldronLastTick: now,
   };
 }
 
@@ -87,6 +99,8 @@ export function ensureCamp(save: GameSave) {
     delete (c as { lastTick?: number }).lastTick;
   }
   if (c.mineLastTick == null) c.mineLastTick = Date.now();
+  if (c.lumber_millLevel == null) c.lumber_millLevel = 0;
+  if (c.lumber_millLastTick == null) c.lumber_millLastTick = Date.now();
   if (c.labLastTick == null) c.labLastTick = Date.now();
   if (c.herbLastTick == null) c.herbLastTick = Date.now();
   if (c.smelterLastTick == null) c.smelterLastTick = Date.now();
@@ -115,6 +129,12 @@ export function ensureCamp(save: GameSave) {
   if (c.watchtowerLastTick == null) c.watchtowerLastTick = Date.now();
   if (c.workshopLastTick == null) c.workshopLastTick = Date.now();
   if (c.springLastTick == null) c.springLastTick = Date.now();
+  if (c.spirit_loomLevel == null) c.spirit_loomLevel = 0;
+  if (c.spirit_loomLastTick == null) c.spirit_loomLastTick = Date.now();
+  if (c.legend_forgeLevel == null) c.legend_forgeLevel = 0;
+  if (c.legend_forgeLastTick == null) c.legend_forgeLastTick = Date.now();
+  if (c.void_cauldronLevel == null) c.void_cauldronLevel = 0;
+  if (c.void_cauldronLastTick == null) c.void_cauldronLastTick = Date.now();
 }
 
 export function getClinicLevel(save: GameSave): number {

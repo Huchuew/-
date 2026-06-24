@@ -2,9 +2,25 @@ import type { GameSave } from '../types';
 import { MONSTERS } from '../data/monsters';
 import { REGIONS } from '../data/regions';
 import { RELIC_MAP, RELICS } from '../data/endgame/relics';
-import { RIFT_DAILY_KEYS } from '../data/endgame/riftFloors';
 import { getSpireWeekId, SPIRE_DAILY_ATTEMPTS } from '../data/endgame/spire';
 import { CHARACTERS } from '../data/characters';
+import { getFloorClearCount } from './DungeonShortcutSystem';
+
+export const ENDGAME_TEASER_MIN_FLOOR = 15;
+/** 야탑 해금 — 18층 보스 격파 (클리어 후 maxRegion 19) */
+export const ENDGAME_UNLOCK_FLOOR = 18;
+
+/** 18층 보스 격파 여부 (17층만 깬 상태 maxRegion=18 은 미해금) */
+export function hasClearedEndgameDungeonBoss(save: GameSave): boolean {
+  if (save.floor18ClearCelebrated) return true;
+  if ((save.badges ?? []).includes(ENDGAME_UNLOCK_FLOOR)) return true;
+  if (getFloorClearCount(save, ENDGAME_UNLOCK_FLOOR) > 0) return true;
+  return (save.maxRegion ?? 1) > ENDGAME_UNLOCK_FLOOR;
+}
+
+export function isEndgameUnlocked(save: GameSave): boolean {
+  return hasClearedEndgameDungeonBoss(save);
+}
 
 export function todayKey(): string {
   const d = new Date();
@@ -14,9 +30,6 @@ export function todayKey(): string {
 export function ensureEndgame(save: GameSave) {
   if (!save.endgame) {
     save.endgame = {
-      riftCleared: 0,
-      riftKeys: RIFT_DAILY_KEYS,
-      riftKeysDay: todayKey(),
       spireBest: 0,
       spireWeek: getSpireWeekId(),
       spireWeekBest: 0,
@@ -26,25 +39,35 @@ export function ensureEndgame(save: GameSave) {
       ascended: [],
     };
   }
-  refreshDailyKeys(save);
+  refreshSpireDaily(save);
   refreshSpireWeek(save);
   checkBonusRelics(save);
 }
 
-export function isEndgameUnlocked(save: GameSave): boolean {
-  return (save.maxRegion ?? 1) >= 18
-    && save.badges.includes(18)
-    && (save.codex.boss_final?.kills ?? 0) > 0;
+export function isEndgameTeaserVisible(save: GameSave): boolean {
+  return (save.maxRegion ?? 1) >= ENDGAME_TEASER_MIN_FLOOR;
 }
 
 /** 엔드게임 잠금 시 미충족 조건 (짧은 문구) */
 export function getEndgameLockHint(save: GameSave): string {
   if (isEndgameUnlocked(save)) return '';
-  const parts: string[] = [];
-  if ((save.maxRegion ?? 1) < 18) parts.push('18층 클리어');
-  if (!save.badges.includes(18)) parts.push('18층 배지');
-  if ((save.codex.boss_final?.kills ?? 0) <= 0) parts.push('10층 경기광주 최종보스 처치');
-  return parts.join(' · ');
+  const maxR = save.maxRegion ?? 1;
+  if (maxR < ENDGAME_UNLOCK_FLOOR) {
+    return `${ENDGAME_UNLOCK_FLOOR}층 도달 (${maxR}/${ENDGAME_UNLOCK_FLOOR})`;
+  }
+  return `${ENDGAME_UNLOCK_FLOOR}층 보스 격파 필요`;
+}
+
+/** 15층+ 티저 — 층별 짧은 설정 문구 */
+export function getEndgameTeaserLore(save: GameSave): string {
+  const maxR = save.maxRegion ?? 1;
+  if (maxR >= 17) {
+    return '모란 너머, 하늘을 찢고 솟은 「무한의 야탑」. 18층을 정복하면 문이 열립니다.';
+  }
+  if (maxR >= 16) {
+    return '옥정 정상에서 보이는 검은 탑. 「야탑」이라 불리는 무한 던전의 실루엣.';
+  }
+  return '평내호평 복도 끝, 중력이 거꾸로 느껴지는 구간. 누군가 「위로 올라가야 한다」고 속삭입니다.';
 }
 
 export interface EndgameTeaserProgress {
@@ -53,31 +76,28 @@ export interface EndgameTeaserProgress {
   hint: string;
 }
 
-/** 15층+ — 차원 허브 잠금 티저 (해금 전만) */
+/** 15층+ — 야탑 허브 잠금 티저 (해금 전만) */
 export function getEndgameTeaserProgress(save: GameSave): EndgameTeaserProgress | null {
   if (isEndgameUnlocked(save)) return null;
   const maxR = save.maxRegion ?? 1;
-  if (maxR < 15) return null;
-  const steps = [
-    { label: '18층 도달', done: maxR >= 18 },
-    { label: '18층 배지', done: save.badges.includes(18) },
-    { label: '경기광주 최종보스', done: (save.codex.boss_final?.kills ?? 0) > 0 },
-  ];
-  const doneN = steps.filter(s => s.done).length;
+  if (maxR < ENDGAME_TEASER_MIN_FLOOR) return null;
+  const reached = maxR >= ENDGAME_UNLOCK_FLOOR;
+  const progressPct = reached
+    ? 88
+    : Math.min(82, Math.round((maxR / ENDGAME_UNLOCK_FLOOR) * 82));
   return {
-    progressPct: Math.round((doneN / steps.length) * 100),
-    steps,
+    progressPct,
+    steps: [
+      { label: `${ENDGAME_UNLOCK_FLOOR}층 도달`, done: reached },
+      { label: `${ENDGAME_UNLOCK_FLOOR}층 보스 격파`, done: false },
+    ],
     hint: getEndgameLockHint(save),
   };
 }
 
-function refreshDailyKeys(save: GameSave) {
+function refreshSpireDaily(save: GameSave) {
   const eg = save.endgame!;
   const today = todayKey();
-  if (eg.riftKeysDay !== today) {
-    eg.riftKeysDay = today;
-    eg.riftKeys = RIFT_DAILY_KEYS;
-  }
   if (eg.spireAttemptsDay !== today) {
     eg.spireAttemptsDay = today;
     eg.spireAttempts = SPIRE_DAILY_ATTEMPTS;
@@ -144,7 +164,7 @@ export function getAscensionMult(save: GameSave, charId: string): number {
 export function getEndgameProgressSummary(save: GameSave): string {
   ensureEndgame(save);
   const eg = save.endgame!;
-  return `균열 ${eg.riftCleared}/50 · 탑 ${eg.spireBest}층 · 유물 ${eg.relics.length}/${RELICS.length} · 각성 ${eg.ascended.length}`;
+  return `야탑 ${eg.spireBest}층 · 유물 ${eg.relics.length}/${RELICS.filter(r => !r.id.includes('rift')).length} · 각성 ${eg.ascended.length}`;
 }
 
 export function getEndgameGoldMult(save: GameSave): number {

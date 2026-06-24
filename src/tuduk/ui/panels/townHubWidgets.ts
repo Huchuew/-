@@ -1,4 +1,5 @@
 import type { GameSave } from '../../types';
+import { getUnreadMailCount, formatMailSummary } from '../../systems/PlayerMessageSystem';
 import type { ElementType, EquipRole } from '../../types';
 import { CHAR_MAP } from '../../data/characters';
 import { RECIPE_MAP } from '../../data/equipment';
@@ -69,7 +70,7 @@ function renderLeaderboardStrip(save: GameSave): string {
   const local = buildLeaderboardLocalView(save);
   return `<button type="button" class="town-hub-line town-hub-line--leaderboard" data-town-sub="leaderboard">
     <span class="town-hub-line-icon" aria-hidden="true">🏆</span>
-    <span class="town-hub-line-copy">랭킹 · 주간 <strong>${local.playerScore.toLocaleString()} SP</strong> · ${local.daysLeftLabel}</span>
+    <span class="town-hub-line-copy">잭펍 랭킹 · 주간 <strong>${local.playerScore.toLocaleString()} SP</strong> · ${local.daysLeftLabel}</span>
     <span class="town-hub-line-chev" aria-hidden="true">›</span>
   </button>`;
 }
@@ -122,9 +123,23 @@ function renderExpeditionHighlight(save: GameSave): string {
   </div>`;
 }
 
+function renderMailStrip(save: GameSave): string {
+  const unread = getUnreadMailCount(save);
+  if (!unread) return '';
+  const preview = formatMailSummary(save);
+  return `<div class="town-mail-strip">
+    <span class="town-mail-icon">📬</span>
+    <div class="town-mail-body">
+      <strong>모험 우편 ${unread}통</strong>
+      <small>${preview ?? '격파 알림'}</small>
+    </div>
+  </div>`;
+}
+
 /** 마을 허브 — 랭킹·특가·시너지·귀환 */
 export function renderTownHubWidgets(save: GameSave, atLodging: boolean): string {
   const parts: string[] = [];
+  parts.push(renderMailStrip(save));
   parts.push(renderLeaderboardStrip(save));
   parts.push(renderSynergyStrip(save));
   if (atLodging) {

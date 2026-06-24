@@ -12,7 +12,7 @@ import { formatAffixTip, getRegionAffix, getWeeklyAffixLabel } from '../data/reg
 import { formatPartySynergyFull, getCharTraitLabels } from '../systems/partySynergy';
 import { getPartyCompositionHint } from '../data/partyComposition';
 import { getBossGateFaq } from '../utils/lockHints';
-import { awakenCost, awakenItem, canAwaken } from '../systems/equipAwakening';
+import { awakenCost, awakenItem, canAwaken, isAwakenableGrade } from '../systems/equipAwakening';
 import type { AdventureSystem } from '../systems/AdventureSystem';
 import { isRegionCleared } from '../systems/AdventureSystem';
 import { CHARACTERS, CHAR_MAP, PRESTIGE_PATHS } from '../data/characters';
@@ -88,7 +88,8 @@ import {
   canCook, getCookRecipes, getCookRemainingSec, hasChef, startCook,
 } from '../systems/CookSystem';
 import { getCodexAtkBonus, getRegionDropHint, getTotalAccessoryCount } from '../systems/CodexSystem';
-import { ACCESSORY_DROP_RATE } from '../data/universalAccessories';
+import { renderAccessoryPanel as renderAccessoryBagPanel } from './panels/accessoryPanel';
+import { salvageJunkAccessories } from '../systems/AccessoryBagSystem';
 import {
   enhanceBonus, formatEnhanceStatDelta, getEnhanceMilestoneLabel, getEnhanceStatPreview,
 } from '../data/equipment';
@@ -97,20 +98,8 @@ import { refreshBgm } from '../core/bgmContext';
 import { bindTap } from '../utils/bindTap';
 import { formatRecipeStatLine, formatStatNum } from '../utils/formatStat';
 import { attachPanelPointerGuard } from '../utils/panelPointerGuard';
-import {
-  ensureEndgame, getEndgameProgressSummary, getRelicBonuses, isAscended, isEndgameUnlocked,
-} from '../systems/EndgameSystem';
-import { attemptRiftFloor, canAttemptRift } from '../systems/RiftSystem';
-import { attemptSpireFloor, canAttemptSpire } from '../systems/SpireSystem';
-import {
-  attemptAscension, canAscend, getAscensionCostText, hasPrestigeComplete,
-} from '../systems/AscensionSystem';
-import { getRiftFloor, RIFT_DAILY_KEYS, RIFT_MAX_FLOOR } from '../data/endgame/riftFloors';
-import { RELICS } from '../data/endgame/relics';
-import {
-  getSpireFloorDps, getSpireWeekId, getWeeklySpireModifier, SPIRE_DAILY_ATTEMPTS,
-} from '../data/endgame/spire';
-import { ELEMENT_ICON } from '../data/elemental';
+import { renderEndgamePanel } from './panels/endgamePanel';
+import { flushPendingAccessoryCelebration } from './legendaryAccessoryModal';
 import {
   getSellableItems, scaleSellGold, sellMaterial,
 } from '../systems/VendorSystem';
@@ -161,9 +150,8 @@ import { formatShortageHtml, formatShortageHint, getCostShortage } from '../syst
 import type { PanelHost, EndgameSub, CollectionSub } from './panels/PanelHost';
 import { subTabs as htmlSubTabs, worldNavGrid as htmlWorldNavGrid, lodgingSection as htmlLodgingSection, panelDetails as htmlPanelDetails } from './panels/panelHtml';
 import { renderSettingsPanel } from './panels/settingsPanel';
-import { renderEndgamePanel } from './panels/endgamePanel';
 import { renderTownHub, townBackButton, type TownSub } from './panels/townPanel';
-import { renderLeaderboardPanel } from './panels/leaderboardPanel';
+import { renderLeaderboardPanel, clearLeaderboardPanelCache } from './panels/leaderboardPanel';
 import { renderProductionCampPanel, productionCampBuildingIds } from './panels/productionCampPanel';
 import { formatCampProduceOutput } from './panels/minimalCamp';
 import { renderPartyPanel } from './panels/partyPanel';
@@ -171,7 +159,12 @@ import { renderMetaBannerHtml } from '../utils/metaHints';
 import { buildDungeonFloorStrip, buildDungeonTips, buildLodgingDungeonBonusHint } from './panels/worldPanel';
 import { renderLodgingDepartPanel } from './panels/dungeonDepartPanel';
 import {
-  hasActiveShortcutDevelopment, reconcileShortcutDevelopment, startShortcutDevelopment,
+  getPinnedShortcutFloor,
+  hasActiveShortcutDevelopment,
+  reconcileShortcutDevelopment,
+  resolveDepartFloor,
+  startShortcutDevelopment,
+  togglePinnedShortcutFloor,
 } from '../systems/DungeonShortcutSystem';
 import {
   findSpotlightSkill, getOwnedPrestigePathNames, renderGrowthCharPicker, renderGrowthSubTabs,
@@ -211,12 +204,13 @@ export class PanelManager implements PanelHost {
   /** 건물 상세 관리 `<details>` 열림 상태 — 강화 후에도 유지 */
   private campDetailOpen = false;
   private prestigeTreeOpen = false;
-  endgameSub: EndgameSub = 'rift';
+  endgameSub: EndgameSub = 'spire';
   ascendCharId = 'mujang';
   collectionSub: CollectionSub = 'bag';
   private upgradeCharId = 'mujang';
   private equipCharId = 'mujang';
   private equipCategory: EquipCategory = 'weapon';
+  private accessoryShowAll = false;
   private dpsPanelOpen = false;
   private formationPanelOpen = false;
   private hudSettingsOpen = false;
@@ -298,7 +292,11 @@ export class PanelManager implements PanelHost {
         e.stopPropagation();
         run(() => {
           const btn = target.closest('#start-expedition, #party-start-expedition') as HTMLElement | null;
-          const floor = Number(btn?.dataset.departTarget ?? this.departFloorId) || 1;
+          const save = this.getSave();
+          const floor = resolveDepartFloor(
+            save,
+            Number(btn?.dataset.departTarget ?? this.departFloorId) || undefined,
+          );
           const tryDepart = () => {
             if (this.getAdv().startExpedition(floor)) {
               audio.playUpgrade();
@@ -326,6 +324,30 @@ export class PanelManager implements PanelHost {
         run(() => {
           this.departFloorId = Number(departFloorBtn.dataset.departFloor) || 1;
           this.render();
+        });
+        return;
+      }
+
+      const pinShortcutBtn = target.closest('[data-pin-shortcut]') as HTMLButtonElement | null;
+      if (pinShortcutBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        run(() => {
+          const save = this.getSave();
+          const floor = Number(pinShortcutBtn.dataset.pinShortcut) || this.departFloorId;
+          if (togglePinnedShortcutFloor(save, floor)) {
+            audio.playTab();
+            saveGame(save);
+            this.showToast(
+              getPinnedShortcutFloor(save) === floor
+                ? `📌 ${floor}층 숏컷 고정 — 모험단 탭에서도 ${floor}층 출발`
+                : '숏컷 고정 해제',
+            );
+            this.render();
+          } else {
+            audio.playFail();
+            this.showToast('이 층은 아직 고정할 수 없어요', false);
+          }
         });
         return;
       }
@@ -683,6 +705,39 @@ export class PanelManager implements PanelHost {
           audio.playEquip();
           saveGame(save);
           this.onRefresh();
+          this.render();
+        });
+        return;
+      }
+
+      const accSalvageBtn = target.closest('[data-accessory-salvage-junk]') as HTMLButtonElement | null;
+      if (accSalvageBtn && !accSalvageBtn.disabled) {
+        e.preventDefault();
+        e.stopPropagation();
+        run(() => {
+          const save = this.getSave();
+          const res = salvageJunkAccessories(save, this.equipCharId);
+          if (res.count > 0) {
+            audio.playGold();
+            saveGame(save);
+            this.onRefresh();
+            this.showToast(`💍 하급 장신구 ${res.count}개 회수 · 🪙${res.gold.toLocaleString()}`);
+            this.render();
+          } else {
+            audio.playFail();
+            this.showToast('회수할 하급 장신구가 없어요', false);
+          }
+        });
+        return;
+      }
+
+      const accToggleBtn = target.closest('[data-accessory-toggle-bag]') as HTMLButtonElement | null;
+      if (accToggleBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        run(() => {
+          this.accessoryShowAll = !this.accessoryShowAll;
+          audio.playTab();
           this.render();
         });
         return;
@@ -1233,6 +1288,7 @@ export class PanelManager implements PanelHost {
         void audio.unlock();
         audio.playTab();
         this.hudSettingsOpen = false;
+        if (this.townSub === 'leaderboard') clearLeaderboardPanelCache();
         this.townSub = sub;
         refreshBgm();
         lastTapMs = now;
@@ -1421,6 +1477,15 @@ export class PanelManager implements PanelHost {
   goToLodgingPanel(sub: 'trade' | 'news' | 'hub' = 'hub') {
     this.tab = 'town';
     this.townSub = sub;
+    this.syncNavActive();
+    this.render();
+  }
+
+  /** 원정·야탑 등반 시작 후 던전 전투 화면으로 전환 */
+  enterDungeonRun() {
+    this.tab = 'town';
+    this.townSub = 'dungeon';
+    this.onRefresh();
     this.syncNavActive();
     this.render();
   }
@@ -1829,6 +1894,7 @@ export class PanelManager implements PanelHost {
     }
     requestAnimationFrame(() => {
       this.panelEl.scrollTop = this.panelScrollTop;
+      flushPendingAccessoryCelebration(this.root, save, () => audio.playLegendaryDrop());
     });
   }
 
@@ -2009,6 +2075,10 @@ export class PanelManager implements PanelHost {
     }
 
     const maxR = save.maxRegion ?? 1;
+    const pinned = getPinnedShortcutFloor(save);
+    if (pinned != null && pinned >= 1 && pinned <= maxR) {
+      this.departFloorId = pinned;
+    }
     if (this.departFloorId > maxR) this.departFloorId = maxR;
     if (this.departFloorId < 1) this.departFloorId = 1;
 
@@ -2265,7 +2335,7 @@ export class PanelManager implements PanelHost {
               </div>
               <div class="prestige-milestone-bar"><div class="prestige-milestone-fill" style="width:${prestigeMilestone.progressPct}%"></div></div>
               <p class="hint">${prestigeMilestone.ready
-                ? '✨ 전직 습득 가능! 아래 전직 · 분기를 확인하세요'
+                ? '✨ 전직 습득 가능! 아래에서 확인하세요'
                 : `다음 전직까지 <b>${prestigeMilestone.levelsAway}레벨</b> · Lv.${PRESTIGE_TIER_LEVELS[0]}/${PRESTIGE_TIER_LEVELS[1]}/${PRESTIGE_TIER_LEVELS[2]}`}</p>
             </div>`
           : prestigeMilestone?.allDone
@@ -2341,6 +2411,56 @@ export class PanelManager implements PanelHost {
           <p class="hint warn">전직 완료 후 스킬 습득 가능</p></div>`;
         continue;
       }
+
+      if (lp.isBranch) {
+        if (lp.branchChoices && lp.branchChoices.length > 0) {
+          html += `<div class="prestige-branch-action">
+            <div class="prestige-fork-banner">⚔️ 2차 전직 — 경로를 선택하세요 (확정 · 무료)</div>
+            <div class="branch-fork branch-fork-gate prestige-fork-grid">`;
+          for (const opt of lp.branchChoices) {
+            const n = opt.node;
+            const locked = isNodeLocked(st, n);
+            html += `<div class="skill-node branch-option branch-option-gate prestige-path-card ${locked ? 'locked' : 'available'}">
+              <div class="prestige-path-card-badge">경로 ${opt.pathLabel}</div>
+              <div class="node-icon">${locked ? '🔒' : '⚔️'}</div>
+              <div class="node-body">
+                <strong>${opt.pathLabel}</strong>
+                <p class="node-desc">${n.name} · ${n.desc}</p>
+                <p class="node-bonus">${getNodeBonusWithSkill(n)}</p>
+                <p class="node-req">${formatPrestigeLevelReq(n, st)}</p>
+              </div>
+              <div class="node-action">
+                ${locked
+                  ? `<span class="locked-tag">Lv.${n.reqLevel}</span>`
+                  : `<button type="button" class="btn-sm gold prestige-claim-btn" data-node="${n.id}">⚔️ ${opt.pathLabel} 선택</button>`}
+              </div>
+            </div>`;
+          }
+          html += '</div></div>';
+        } else if (lp.next?.branchGroup) {
+          const n = lp.next;
+          const locked = isNodeLocked(st, n);
+          const tierLabel = n.branchTier === 2 ? '3차' : n.branchTier === 3 ? '4차' : '';
+          html += `<div class="prestige-branch-action">
+            <div class="skill-node ${locked ? 'locked' : 'available'} prestige-gate-node ${prestigeGate ? 'prestige-gate-node-active' : ''}">
+              <div class="node-icon">${locked ? '🔒' : '⚔️'}</div>
+              <div class="node-body">
+                <strong>${tierLabel ? `${tierLabel} · ` : ''}${n.name}</strong>
+                <p class="node-desc">${n.desc}</p>
+                <p class="node-bonus">${getNodeBonusWithSkill(n)}</p>
+                <p class="node-req">${formatPrestigeLevelReq(n, st)}</p>
+              </div>
+              <div class="node-action">
+                ${locked
+                  ? `<span class="locked-tag">Lv.${n.reqLevel}</span>`
+                  : `<button type="button" class="btn-sm gold prestige-claim-btn" data-node="${n.id}">⚔️ ${tierLabel || '전직'} 확정 습득</button>`}
+              </div>
+            </div>
+          </div>`;
+        }
+        continue;
+      }
+
       const doneChain = lp.completed.map(c => c.name).join(' → ');
       html += `<div class="growth-line">
         <div class="growth-line-head">
@@ -2351,52 +2471,8 @@ export class PanelManager implements PanelHost {
 
       if (lp.allDone) {
         html += '<p class="growth-master">🏆 마스터</p>';
-      } else if (lp.branchChoices && lp.branchChoices.length > 0) {
-        html += `<div class="prestige-fork-banner">⚔️ 2차 전직 — 경로를 선택하세요 (확정 · 무료)</div>
-          <div class="branch-fork branch-fork-gate prestige-fork-grid">`;
-        for (const opt of lp.branchChoices) {
-          const n = opt.node;
-          const locked = isNodeLocked(st, n);
-          const canTry = !locked && canAttemptLearn(save, charId, n);
-          html += `<div class="skill-node branch-option branch-option-gate prestige-path-card ${locked ? 'locked' : 'available'}">
-            <div class="prestige-path-card-badge">경로 ${opt.pathLabel}</div>
-            <div class="node-icon">${locked ? '🔒' : '⚔️'}</div>
-            <div class="node-body">
-              <strong>${opt.pathLabel}</strong>
-              <p class="node-desc">${n.name} · ${n.desc}</p>
-              <p class="node-bonus">${getNodeBonusWithSkill(n)}</p>
-              <p class="node-req">${formatPrestigeLevelReq(n, st)}</p>
-            </div>
-            <div class="node-action">
-              ${locked
-                ? `<span class="locked-tag">Lv.${n.reqLevel}</span>`
-                : `<button type="button" class="btn-sm gold prestige-claim-btn" data-node="${n.id}">⚔️ ${opt.pathLabel} 선택</button>`}
-            </div>
-          </div>`;
-        }
-        html += '</div>';
-      } else if (lp.next) {
-        const n = lp.next;
-        if (!n.branchGroup) {
-          /* 일반 스킬 — 습득 가능 시 상단 「다음 스킬」 카드만 사용 */
-        } else {
-        const locked = isNodeLocked(st, n);
-        const tierLabel = n.branchTier === 2 ? '3차' : n.branchTier === 3 ? '4차' : '';
-        html += `<div class="skill-node ${locked ? 'locked' : 'available'} prestige-gate-node ${prestigeGate ? 'prestige-gate-node-active' : ''}">
-          <div class="node-icon">${locked ? '🔒' : '⚔️'}</div>
-          <div class="node-body">
-            <strong>${tierLabel ? `${tierLabel} · ` : ''}${n.name}</strong>
-            <p class="node-desc">${n.desc}</p>
-            <p class="node-bonus">${getNodeBonusWithSkill(n)}</p>
-            <p class="node-req">${formatPrestigeLevelReq(n, st)}</p>
-          </div>
-          <div class="node-action">
-            ${locked
-              ? `<span class="locked-tag">Lv.${n.reqLevel}</span>`
-              : `<button type="button" class="btn-sm gold prestige-claim-btn" data-node="${n.id}">⚔️ ${tierLabel || '전직'} 확정 습득</button>`}
-          </div>
-        </div>`;
-        }
+      } else if (lp.next && !lp.next.branchGroup) {
+        /* 일반 스킬 — 습득 가능 시 상단 「다음 스킬」 카드만 사용 */
       }
       html += '</div>';
     }
@@ -2506,11 +2582,13 @@ export class PanelManager implements PanelHost {
     const enhanceShortage = !growthBlocked && !ok
       ? this.formatCostShortage(save, cost.gold, cost.mats)
       : '';
-    const awakenShortage = !canAw && (item.grade === 'ur' || item.grade.startsWith('u')) && awakenLv < 3
+    const awakenShortage = !canAw && isAwakenableGrade(item.grade) && awakenLv < 3
       ? this.formatCostShortage(save, awCost.gold, awCost.mats)
       : '';
-    const awakenBlock = (item.grade === 'ur' || item.grade.startsWith('u')) && awakenLv < 3 ? `
-        <p class="recipe-stat">★각성 ${awakenLv}/3 — 세트 보너스 +${awakenLv * 5}%</p>
+    const awakenStatPct = awakenLv * 8;
+    const awakenBlock = isAwakenableGrade(item.grade) && awakenLv < 3 ? `
+        <p class="recipe-stat">★각성 ${awakenLv}/3 — 장비 스탯 +${awakenStatPct}% · 세트 시너지 +${awakenLv * 5}%/★</p>
+        ${item.grade === 'ur' && awakenLv < 3 ? '<p class="hint">★3 각성 후 초월(다음 등급) 제작 해금</p>' : ''}
         <p class="recipe-cost">🪙${awCost.gold.toLocaleString()} · ${this.formatMats(awCost.mats)}</p>
         ${awakenShortage}
         <button class="btn-sm gold" data-awaken="${item.uid}" ${canAw ? '' : 'disabled'}>★ 각성</button>` : '';
@@ -2621,59 +2699,13 @@ export class PanelManager implements PanelHost {
   }
 
   private renderAccessoryPanel(save: GameSave, charId: string): string {
-    const region = save.maxRegion ?? 1;
-    const dropPct = Math.round(ACCESSORY_DROP_RATE * 1000) / 10;
-    const hint = getRegionDropHint(save, region);
-    const slots = ['ring', 'necklace', 'relic'] as const;
-    const slotLabel = { ring: '반지', necklace: '목걸이', relic: '유물' };
-    const equipped = slots.map(slot => {
-      const uid = save.chars[charId]?.equipped[slot];
-      const item = uid ? save.bag.find(b => b.uid === uid) : null;
-      const r = item ? RECIPE_MAP[item.id] : null;
-      if (!item || !r) {
-        return `<div class="equip-step empty-step"><strong>${slotLabel[slot]}</strong><p class="hint">미장착 — 던전 드랍</p></div>`;
-      }
-      const maxLv = getMaxEnhanceForGrade(item.grade);
-      const cost = enhanceCost(save, item.level, item.grade);
-      const ok = canEnhance(save, item.uid);
-      const pct = item.level >= maxLv ? 0 : Math.round(
-        (enhanceBonus(item.level + 1, item.grade) / Math.max(0.01, enhanceBonus(item.level, item.grade)) - 1) * 100,
-      );
-      const statLine = formatEnhanceStatDelta(r, item.level);
-      const milestone = item.level < maxLv ? getEnhanceMilestoneLabel(item.level + 1, item.grade) : null;
-      const curStats = getEnhanceStatPreview(r, item.level);
-      const accShortage = item.level < maxLv && !ok
-        ? this.formatCostShortage(save, cost.gold, cost.mats)
-        : '';
-      return `<div class="equip-step" style="border-color:${GRADE_COLOR[item.grade]}">
-        <strong>${slotLabel[slot]}: ${r.name}</strong>
-        <span class="grade-tag" style="color:${GRADE_COLOR[item.grade]}">${GRADE_LABEL[item.grade]} +${item.level}</span>
-        <p class="recipe-stat enhance-now">현재 ATK+${curStats.atk} DEF+${curStats.def} HP+${curStats.hp}</p>
-        ${item.level < maxLv
-          ? `<p class="recipe-stat enhance-next">${statLine} <strong>(+${pct}%)</strong></p>
-             ${milestone ? `<p class="hint enhance-milestone">${milestone}</p>` : ''}
-             <p class="recipe-cost">🪙${cost.gold.toLocaleString()} · ${this.formatMats(cost.mats)}</p>
-             ${accShortage}
-             <button class="btn-sm gold" data-enhance="${item.uid}" ${ok ? '' : 'disabled'}>강화</button>`
-          : '<p class="hint enhance-max">💥 MAX 강화 달성</p>'}
-        ${uid ? `<button class="btn-sm" data-unequip-acc="${slot}" data-char="${charId}">착용 해제</button>` : ''}
-      </div>`;
-    }).join('');
-    const bagUni = getVisibleBagItems(save, { charId, universalOnly: true });
-    const bagRows = bagUni.length
-      ? bagUni.map(b => {
-        const r = RECIPE_MAP[b.id]!;
-        return `<button class="btn-sm" data-equip-acc="${b.uid}" data-char="${charId}">[${GRADE_LABEL[b.grade]}] ${r.name} +${b.level}</button>`;
-      }).join(' ')
-      : '<p class="hint">장착 가능한 통합 장신구 없음 (타인 착용 중은 표시 안 됨)</p>';
-    return `
-      <div class="accessory-drop-box">
-        <p class="hint">💍 통합 장신구 ${getTotalAccessoryCount()}종 · 던전 처치 시 ~${dropPct}% 드랍 · 누구나 착용</p>
-        <p class="hint codex-drop-hint">${hint}</p>
-        <p class="hint">민첩 강화 시 무기·방어구도 무료 +1 (1분 쿨) · 탱커는 어그로도 함께 성장</p>
-      </div>
-      <h4>착용 중</h4>${equipped}
-      <h4>가방 (장착)</h4><div class="accessory-bag-btns">${bagRows}</div>`;
+    return renderAccessoryBagPanel(
+      save,
+      charId,
+      this.accessoryShowAll,
+      m => this.formatMats(m),
+      (s, gold, mats) => this.formatCostShortage(s, gold, mats),
+    );
   }
 
   private renderEquipment(save: GameSave, embedded = false) {

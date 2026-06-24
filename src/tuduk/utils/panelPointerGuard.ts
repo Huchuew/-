@@ -8,6 +8,7 @@ const H_SCROLL_SEL = [
   '.growth-char-roster-grid',
   '.growth-char-picker',
   '.depart-floor-scroll',
+  '.depart-floor-grid',
   '.prestige-tree-wrap',
   '.combat-status-hud',
 ].join(', ');

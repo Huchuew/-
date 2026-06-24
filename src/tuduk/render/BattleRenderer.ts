@@ -2,7 +2,7 @@ import { configurePixelArtContext, getImage, getKeyedCanvas } from '../assets/As
 import type { AdventureSystem } from '../systems/AdventureSystem';
 import { CHAR_MAP, charUsesProjectile } from '../data/characters';
 import { getVisualPartyOrder } from '../systems/FormationSystem';
-import { getBattleLayout, getBattleSpriteSize, getEnemySlotXs, getPartySlotStagger, calcMeleeDashDistance, type BattleLayout } from '../data/tinyRpgAnim';
+import { getBattleLayout, getBattleSpriteSize, getEnemySlotXs, getPartySlotStagger, calcMeleeDashDistance, getRivalDuelBattleLayout, getRivalDuelEnemySlotXs, getRivalSlotDepthOffset, scaleBattleSpriteSize, RIVAL_DUEL_SPRITE_SCALE, type BattleLayout } from '../data/tinyRpgAnim';
 import { getMonsterBattleSpriteSize } from '../data/pipoyaMap';
 import type { ProjectileKind } from '../data/tinyRpgAnim';
 import { drawPixelSpriteImpact } from './SpriteLoader';
@@ -11,7 +11,8 @@ import {
   CHAR_BAR_WIDTH_RATIO, CHAR_BAR_Y_RATIO, CHAR_GAUGE_BAR_H, CHAR_GAUGE_OFFSET,
   CHAR_FOOT_LIFT_RATIO, CHAR_HP_BAR_H, CHAR_NAME_BAR_GAP, CHAR_SKILL_CHARGE_BELOW_NAME,
   CHAR_WALK_FOOT_LIFT_RATIO, getCharNameYRatio, getProjectileHandOffset,
-  PROJECTILE_CENTER_DOWN_RATIO,
+  PROJECTILE_CENTER_DOWN_RATIO, RIVAL_DUEL_BAR_WIDTH_RATIO, RIVAL_DUEL_BAR_Y_RATIO,
+  RIVAL_DUEL_NAME_Y_RATIO,
 } from '../data/charUiLayout';
 import { spiritBarColor } from '../systems/eliteSpirit';
 import { gaugeBarColor, gaugeLabel } from '../systems/GaugeSystem';
@@ -19,7 +20,7 @@ import { drawCharacterSprite } from './CharacterSprite';
 import { drawMonsterSprite } from './MonsterSprite';
 import { getMonsterGroundOffset } from '../data/monsterGroundOffset';
 import { ELEMENT_COLOR, ELEMENT_ICON } from '../data/elemental';
-import type { ElementType, EncounterSlot } from '../types';
+import type { ElementType, EncounterSlot, GaugeType } from '../types';
 
 function resolveMeleeDashDist(
   partySlotX: number,
@@ -77,6 +78,27 @@ interface PartySlotAnchor {
   nameBaselineY: number;
 }
 
+interface RivalHudEntry {
+  x: number;
+  barY: number;
+  nameY: number;
+  barW: number;
+  hpRatio: number;
+  hpColor: string;
+  label: string;
+  nameSize: number;
+  nameColor?: string;
+  gaugeRatio?: number;
+  gaugeType?: GaugeType;
+}
+
+function rivalCharHudY(footY: number, spriteH: number): { barY: number; nameY: number } {
+  return {
+    barY: footY - Math.round(spriteH * RIVAL_DUEL_BAR_Y_RATIO),
+    nameY: footY - Math.round(spriteH * RIVAL_DUEL_NAME_Y_RATIO),
+  };
+}
+
 export class BattleRenderer {
   drawBattlefield(
     ctx: CanvasRenderingContext2D,
@@ -91,6 +113,7 @@ export class BattleRenderer {
     cb: BattleDrawCallbacks,
   ) {
     const inCombat = adv.phase === 'combat' || adv.phase === 'boss';
+    const isRivalDuel = adv.isRivalDuelActive();
     const isPartyMoving = adv.isWalking() || adv.isTraveling();
     const showPartyHudBars = inCombat && !adv.isCombatSkillBarActive();
     const vfx = adv.vfx;
@@ -100,7 +123,9 @@ export class BattleRenderer {
       hudH + 48,
       Math.min(h - 2, Math.round(groundY - footLift)),
     );
-    const layout = getBattleLayout(w, h, hudH, footY, adv.save.party.length, inCombat);
+    const layout = isRivalDuel
+      ? getRivalDuelBattleLayout(w, h, hudH, footY, adv.save.party.length)
+      : getBattleLayout(w, h, hudH, footY, adv.save.party.length, inCombat);
     /** 파티·적 공통 지면 — 발 접지선(footY) 기준 */
     const enemyFootY = footY;
 
@@ -110,13 +135,23 @@ export class BattleRenderer {
     let impactAnchorH = getMonsterBattleSpriteSize(w, h, hudH, false).h;
     let enemySizes: { w: number; h: number }[] = [];
     let enemyXs: number[] = [layout.enemyX];
+    const rivalHudQueue: RivalHudEntry[] = [];
     if (aliveEnemies.length > 0) {
       enemySizes = aliveEnemies.map(enc => {
+        if (enc.rivalCharId) {
+          const s = scaleBattleSpriteSize(
+            getBattleSpriteSize(w, h, hudH, enemyFootY, 'player'),
+            RIVAL_DUEL_SPRITE_SCALE,
+          );
+          return { w: s.w, h: s.h };
+        }
         const boss = enc.def.isBoss || enc.def.id.startsWith('boss_');
         return getMonsterBattleSpriteSize(w, h, hudH, boss, enc.def.id);
       });
       const maxEw = Math.max(...enemySizes.map(s => s.w));
-      enemyXs = getEnemySlotXs(layout.enemyX, maxEw, aliveEnemies.length);
+      enemyXs = isRivalDuel
+        ? getRivalDuelEnemySlotXs(layout.enemyX, maxEw, aliveEnemies.length)
+        : getEnemySlotXs(layout.enemyX, maxEw, aliveEnemies.length);
       impactAnchorX = enemyXs[0] ?? layout.enemyX;
       const primaryMonId = aliveEnemies[0]!.def.id;
       impactAnchorFootY = enemyFootY + getMonsterGroundOffset(primaryMonId);
@@ -126,23 +161,49 @@ export class BattleRenderer {
         const monId = enc.def.id;
         const { w: ew, h: eh } = enemySizes[i]!;
         const ex = enemyXs[i] ?? layout.enemyX;
-        const monFootY = enemyFootY + getMonsterGroundOffset(monId);
+        const depthY = isRivalDuel && enc.rivalCharId
+          ? getRivalSlotDepthOffset(i, aliveEnemies.length)
+          : 0;
+        const monFootY = enemyFootY + getMonsterGroundOffset(monId) + depthY;
         const strikeProg = vfx.getEnemyStrikeProgress(i);
-        const lunge = vfx.getEnemyStrikeOffset(strikeProg, Math.round(ew * 0.22));
+        const lunge = (isRivalDuel && enc.rivalCharId)
+          ? 0
+          : vfx.getEnemyStrikeOffset(strikeProg, Math.round(ew * 0.22));
         const flash = Math.max(vfx.getEnemyAttackFlash(i), vfx.getEnemyHitFlash(i));
-        const drawn = drawMonsterSprite(ctx, {
-          monId,
-          x: ex + lunge,
-          y: monFootY,
-          w: ew,
-          h: eh,
-          animTime,
-          flash,
-          inCombat,
-          hp: enc.entity.hp,
-          maxHp: enc.entity.maxHp,
-          strikeProg,
-        });
+        let drawn = false;
+        if (enc.rivalCharId && CHAR_MAP[enc.rivalCharId]) {
+          ctx.save();
+          ctx.translate(ex + lunge, 0);
+          ctx.scale(-1, 1);
+          drawn = drawCharacterSprite(ctx, {
+            charId: enc.rivalCharId,
+            x: 0,
+            y: monFootY,
+            w: ew,
+            h: eh,
+            inCombat,
+            animTime,
+            flash,
+            slot: i,
+            hp: enc.entity.hp,
+            dieAnimProgress: enc.entity.dieAnimProgress,
+          });
+          ctx.restore();
+        } else {
+          drawn = drawMonsterSprite(ctx, {
+            monId,
+            x: ex + lunge,
+            y: monFootY,
+            w: ew,
+            h: eh,
+            animTime,
+            flash,
+            inCombat,
+            hp: enc.entity.hp,
+            maxHp: enc.entity.maxHp,
+            strikeProg,
+          });
+        }
         if (!drawn) {
           cb.drawMonsterFallback(ex, monFootY, '#cc4444', '', eh / 100, animTime);
         } else if (flash > 0) {
@@ -156,58 +217,87 @@ export class BattleRenderer {
           }
         }
 
-        const barW = Math.round(ew * CHAR_BAR_WIDTH_RATIO);
-        const nameSize = Math.max(8, Math.min(11, h * 0.04));
+        const isRivalChar = !!enc.rivalCharId;
+        const barW = Math.round(ew * (isRivalDuel && isRivalChar ? RIVAL_DUEL_BAR_WIDTH_RATIO : CHAR_BAR_WIDTH_RATIO));
+        const nameSize = isRivalDuel && isRivalChar
+          ? Math.max(7, Math.min(9, h * 0.032))
+          : Math.max(8, Math.min(11, h * 0.04));
         const nameGap = Math.max(CHAR_NAME_BAR_GAP, Math.round(nameSize * 0.45));
-        const uiStack = i * (nameGap + 12);
-        const isElite = enc.isElite;
-        const spiritBand = isElite ? CHAR_GAUGE_BAR_H + 3 : 0;
-        const barY = monFootY - Math.round(eh * 0.10) - uiStack - spiritBand;
-        let nameY = monFootY - Math.round(eh * 0.48) - uiStack;
-        nameY = Math.min(nameY, barY - nameGap);
+        const isElite = enc.isElite && !isRivalChar;
+        let barY: number;
+        let nameY: number;
+        if (isRivalChar) {
+          ({ barY, nameY } = rivalCharHudY(monFootY, eh));
+        } else {
+          const uiStack = i * (nameGap + 12);
+          const spiritBand = isElite ? CHAR_GAUGE_BAR_H + 3 : 0;
+          barY = monFootY - Math.round(eh * 0.10) - uiStack - spiritBand;
+          nameY = monFootY - Math.round(eh * 0.48) - uiStack;
+          nameY = Math.min(nameY, barY - nameGap);
+        }
         const minNameY = hudSafeBottom + nameSize + 4;
         if (nameY < minNameY) {
           const lift = minNameY - nameY;
           nameY += lift;
+          barY += lift;
         }
         const hpRatio = enc.entity.hp / enc.entity.maxHp;
         const isBoss = enc.def.isBoss || enc.def.id.startsWith('boss_');
         const isBossBar = isBoss && i === 0;
-        const isRareBar = enc.def.isRare;
-        const hpColor = isBossBar
-          ? (hpRatio > 0.5 ? '#ff2244' : '#cc1133')
-          : isRareBar
-            ? (hpRatio > 0.5 ? '#cc66ff' : '#9944cc')
-            : isElite
-              ? (hpRatio > 0.5 ? '#ffcc00' : '#ff9900')
-              : hpRatio > 0.5 ? '#ff5555' : hpRatio > 0.25 ? '#ff8844' : '#ff3333';
-        cb.drawHpBar(ex - barW / 2, barY, barW, hpRatio, hpColor);
-        if (isElite) {
-          const spirit = enc.spiritGauge ?? 0;
-          cb.drawGaugeBar(
-            ex - barW / 2, barY + CHAR_HP_BAR_H + 1, barW, spirit,
-            spiritBarColor(spirit), '투지',
-          );
-        }
+        const isRareBar = enc.def.isRare && !isRivalChar;
+        const hpColor = isRivalChar
+          ? (hpRatio > 0.5 ? '#ff7777' : hpRatio > 0.25 ? '#ff9955' : '#ff4444')
+          : isBossBar
+            ? (hpRatio > 0.5 ? '#ff2244' : '#cc1133')
+            : isRareBar
+              ? (hpRatio > 0.5 ? '#cc66ff' : '#9944cc')
+              : isElite
+                ? (hpRatio > 0.5 ? '#ffcc00' : '#ff9900')
+                : hpRatio > 0.5 ? '#ff5555' : hpRatio > 0.25 ? '#ff8844' : '#ff3333';
         const el = enc.def.element;
         const elIcon = el && el !== 'none' ? ELEMENT_ICON[el as ElementType] : '';
-        let label = aliveEnemies.length > 1 ? `${enc.entity.name} (${i + 1})` : enc.entity.name;
-        if (elIcon) label = `${elIcon} ${label}`;
+        const rivalDef = isRivalChar ? CHAR_MAP[enc.rivalCharId!] : undefined;
+        let label = isRivalChar
+          ? (rivalDef?.name ?? enc.entity.name.split(' ')[0] ?? enc.entity.name)
+          : aliveEnemies.length > 1 ? `${enc.entity.name} (${i + 1})` : enc.entity.name;
+        if (elIcon && !isRivalChar) label = `${elIcon} ${label}`;
         if (isElite && i === 0) label = `⚠ ${label}`;
-        const nameColor = isElite
-          ? '#ffcc44'
-          : isRareBar
-            ? '#dd88ff'
-            : el && el !== 'none'
-              ? ELEMENT_COLOR[el as ElementType]
-              : undefined;
-        cb.drawNameLabel(ex, nameY, label, isBoss && i === 0 ? nameSize + 1 : nameSize, nameColor);
+        const nameColor = isRivalChar
+          ? '#ffdddd'
+          : isElite
+            ? '#ffcc44'
+            : isRareBar
+              ? '#dd88ff'
+              : el && el !== 'none'
+                ? ELEMENT_COLOR[el as ElementType]
+                : undefined;
+        if (isRivalDuel && isRivalChar) {
+          rivalHudQueue.push({
+            x: ex, barY, nameY, barW, hpRatio, hpColor, label, nameSize, nameColor,
+          });
+        } else {
+          cb.drawHpBar(ex - barW / 2, barY, barW, hpRatio, hpColor);
+          if (isElite) {
+            const spirit = enc.spiritGauge ?? 0;
+            cb.drawGaugeBar(
+              ex - barW / 2, barY + CHAR_HP_BAR_H + 1, barW, spirit,
+              spiritBarColor(spirit), '투지',
+            );
+          }
+          cb.drawNameLabel(ex, nameY, label, isBoss && i === 0 ? nameSize + 1 : nameSize, nameColor);
+        }
       });
     }
 
-    const { w: allyW, h: allyH } = getBattleSpriteSize(w, h, hudH, footY, 'player');
-    const labelSize = Math.max(10, Math.min(14, h * 0.048));
-    const barW = Math.round(allyW * CHAR_BAR_WIDTH_RATIO);
+    const allySize = scaleBattleSpriteSize(
+      getBattleSpriteSize(w, h, hudH, footY, 'player'),
+      isRivalDuel ? RIVAL_DUEL_SPRITE_SCALE : 1,
+    );
+    const { w: allyW, h: allyH } = allySize;
+    const labelSize = isRivalDuel
+      ? Math.max(7, Math.min(9, h * 0.032))
+      : Math.max(10, Math.min(14, h * 0.048));
+    const barW = Math.round(allyW * (isRivalDuel ? RIVAL_DUEL_BAR_WIDTH_RATIO : CHAR_BAR_WIDTH_RATIO));
 
     const partyIds = getVisualPartyOrder(adv.save);
     const partyAnchors: PartySlotAnchor[] = [];
@@ -221,11 +311,11 @@ export class BattleRenderer {
       const basePx = layout.partyBaseX + i * layout.partyGap + getPartySlotStagger(partyIds, i, layout.partyGap);
       let px = basePx;
       const meleeEnemyUid = inCombat ? vfx.getMeleeEnemyUid(i) : null;
-      const meleeDashDist = inCombat
+      const meleeDashDist = inCombat && !isRivalDuel
         ? resolveMeleeDashDist(
           basePx, allyW, meleeEnemyUid, aliveEnemies, enemyXs, enemySizes, layout.dashMaxDist,
         )
-        : layout.dashMaxDist;
+        : 0;
 
       const meleeVis = vfx.getMeleeVisual(i, meleeDashDist);
       let dashProg = 0;
@@ -234,7 +324,7 @@ export class BattleRenderer {
       let meleeEngaged = false;
 
       if (meleeVis) {
-        px = Math.round(px + meleeVis.offsetX);
+        if (!isRivalDuel) px = Math.round(px + meleeVis.offsetX);
         dashProg = meleeVis.swingProg;
         dashSlot = meleeVis.dashSlot;
         strikeAnimKey = meleeVis.attackKey;
@@ -243,23 +333,27 @@ export class BattleRenderer {
         const strikeProg = vfx.getStrikeProgress();
         const projectileStrike = !vfx.partyStrike.advance
           && (vfx.partyStrike.delivery === 'projectile' || charUsesProjectile(id));
-        if (!projectileStrike) {
+        if (!projectileStrike && !isRivalDuel) {
           px = Math.round(px + vfx.getStrikeOffset(strikeProg, meleeDashDist));
         }
-        dashProg = strikeProg;
-        dashSlot = i;
-        strikeAnimKey = vfx.partyStrike.attackKey ?? null;
+        if (!projectileStrike) {
+          dashProg = strikeProg;
+          dashSlot = i;
+          strikeAnimKey = vfx.partyStrike.attackKey ?? null;
+        }
       }
 
       px = Math.round(px);
       const minX = Math.round(allyW * 0.5 + 6);
       const maxX = Math.round(w - allyW * 0.5 - 6);
       px = Math.max(minX, Math.min(maxX, px));
-      const py = footY;
-      const nameY = py - Math.round(allyH * getCharNameYRatio(id));
-      const barY = py - Math.round(allyH * CHAR_BAR_Y_RATIO);
+      const depthY = isRivalDuel ? getRivalSlotDepthOffset(i, partyIds.length) : 0;
+      const py = footY + depthY;
+      const rivalUi = isRivalDuel ? rivalCharHudY(py, allyH) : null;
+      const nameY = rivalUi ? rivalUi.nameY : py - Math.round(allyH * getCharNameYRatio(id));
+      const barY = rivalUi ? rivalUi.barY : py - Math.round(allyH * CHAR_BAR_Y_RATIO);
       const nameGap = Math.max(CHAR_NAME_BAR_GAP, Math.round(labelSize * 0.45));
-      const stackedNameY = Math.min(nameY, barY - nameGap);
+      const stackedNameY = rivalUi ? nameY : Math.min(nameY, barY - nameGap);
       const anchor: PartySlotAnchor = {
         charId: id,
         slot: i,
@@ -308,12 +402,12 @@ export class BattleRenderer {
             cb.drawStatusRing(px, py - allyH * 0.46, allyW, sAlpha, statusFlash.color, statusFlash.glow, statusFlash.ring);
           }
         }
-        if (!adv.isCombatSkillBarActive()) {
+        if (!adv.isCombatSkillBarActive() && !isRivalDuel) {
           cb.drawNameLabel(px, stackedNameY, def.name, labelSize);
         }
       } else {
         cb.drawCharacterFallback(px, py, def.color, def.accent, def.name, inCombat, animTime + i, allyH / 62);
-        if (!adv.isCombatSkillBarActive()) {
+        if (!adv.isCombatSkillBarActive() && !isRivalDuel) {
           cb.drawNameLabel(px, stackedNameY, def.name, labelSize);
         }
         if (partyFlash > 0) cb.drawHitRing(px, py - allyH * 0.45, allyW, partyFlash);
@@ -323,19 +417,33 @@ export class BattleRenderer {
       if (combat && showPartyHudBars) {
         const ratio = combat.hp / Math.max(1, combat.maxHp);
         const barColor = ratio > 0.5 ? '#44cc66' : ratio > 0.25 ? '#ccaa44' : '#ff6644';
-        cb.drawHpBar(px - barW / 2, barY, barW, ratio, barColor);
-        if (combat.gaugeType && combat.gauge != null) {
-          const gRatio = combat.gauge / Math.max(0.01, combat.gaugeMax ?? 1);
-          cb.drawGaugeBar(
-            px - barW / 2, barY + CHAR_GAUGE_OFFSET, barW, gRatio,
-            gaugeBarColor(combat.gaugeType, gRatio),
-            gaugeLabel(combat.gaugeType),
-          );
+        if (isRivalDuel) {
+          rivalHudQueue.push({
+            x: px,
+            barY,
+            nameY: stackedNameY,
+            barW,
+            hpRatio: ratio,
+            hpColor: barColor,
+            label: def.name,
+            nameSize: labelSize,
+            nameColor: '#e8ffe8',
+          });
+        } else {
+          cb.drawHpBar(px - barW / 2, barY, barW, ratio, barColor);
+          if (combat.gaugeType && combat.gauge != null) {
+            const gRatio = combat.gauge / Math.max(0.01, combat.gaugeMax ?? 1);
+            cb.drawGaugeBar(
+              px - barW / 2, barY + CHAR_GAUGE_OFFSET, barW, gRatio,
+              gaugeBarColor(combat.gaugeType, gRatio),
+              gaugeLabel(combat.gaugeType),
+            );
+          }
         }
       }
 
       const skillCharge = vfx.getSkillChargeSlot(i);
-      if (skillCharge && skillCharge.ratio > 0.02) {
+      if (skillCharge && skillCharge.ratio > 0.02 && !isRivalDuel) {
         const chargeY = stackedNameY + CHAR_SKILL_CHARGE_BELOW_NAME;
         cb.drawSkillChargeBar(
           px, chargeY, Math.round(barW * 0.72), skillCharge.ratio, skillCharge.color,
@@ -343,6 +451,20 @@ export class BattleRenderer {
         );
       }
     });
+
+    if (isRivalDuel && rivalHudQueue.length > 0) {
+      for (const hud of rivalHudQueue) {
+        cb.drawNameLabel(hud.x, hud.nameY, hud.label, hud.nameSize, hud.nameColor);
+        cb.drawHpBar(hud.x - hud.barW / 2, hud.barY, hud.barW, hud.hpRatio, hud.hpColor);
+        if (hud.gaugeRatio != null && hud.gaugeType) {
+          cb.drawGaugeBar(
+            hud.x - hud.barW / 2, hud.barY + CHAR_GAUGE_OFFSET, hud.barW, hud.gaugeRatio,
+            gaugeBarColor(hud.gaugeType, hud.gaugeRatio),
+            gaugeLabel(hud.gaugeType),
+          );
+        }
+      }
+    }
 
     if (inCombat && vfx.projectiles.length > 0 && !adv.isCombatPerfLite()) {
       const enemyFootYs = aliveEnemies.length > 0

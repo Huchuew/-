@@ -21,13 +21,16 @@ export interface OfflineResult {
 }
 
 export function calcOfflineReward(save: GameSave): OfflineResult {
-  const elapsed = Math.min(Date.now() - save.lastOnline, MAX_OFFLINE_MS);
+  const lastOnline = Number.isFinite(save.lastOnline) && save.lastOnline > 0
+    ? save.lastOnline
+    : Date.now();
+  const elapsed = Math.min(Math.max(0, Date.now() - lastOnline), MAX_OFFLINE_MS);
   if (elapsed < MIN_OFFLINE_MS) {
     return { gold: 0, exp: 0, hours: 0, bossPaceSec: 0, codexDiscoveries: 0 };
   }
 
   const hours = elapsed / 3_600_000;
-  const dps = getPartyDps(save);
+  const dps = Math.max(0, getPartyDps(save) || 0);
   const chefBonus = getChefOfflineBonus(save);
   const expMult = getEndgameExpMult(save);
   const progressMult = earlyProgressGoldMult(save.maxRegion ?? 1);
@@ -70,6 +73,9 @@ export function applyOfflineReward(save: GameSave): OfflineResult {
   if (reward.exp <= 0 && reward.gold <= 0 && reward.bossPaceSec <= 0 && reward.codexDiscoveries <= 0) {
     return reward;
   }
+
+  // 중복 수령 방지 — 보상 지급 직전 시각 고정 (멀티탭·저장 실패 대비)
+  save.lastOnline = Date.now();
 
   if (reward.exp > 0) {
     const perCharBase = Math.floor(reward.exp / Math.max(1, save.party.length));

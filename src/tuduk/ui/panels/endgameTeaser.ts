@@ -1,29 +1,35 @@
 import type { GameSave } from '../../types';
-import { getEndgameLockHint, getEndgameTeaserProgress, isEndgameUnlocked } from '../../systems/EndgameSystem';
+import {
+  getEndgameLockHint, getEndgameTeaserLore, getEndgameTeaserProgress, isEndgameUnlocked,
+} from '../../systems/EndgameSystem';
+import { isSpireTestBypass } from '../../data/endgame/spireTest';
 
-/** 기록 카드 옆 — 차원의 문 미니 버튼 (15층+ 또는 해금 후) */
+function endgameMiniBody(title: string, subtitle: string): string {
+  return `<span class="town-hub-mini-row">
+    <span class="town-hub-mini-icon" aria-hidden="true">🗼</span>
+    <span class="town-hub-mini-body">
+      <strong>${title}</strong>
+      <small>${subtitle}</small>
+    </span>
+  </span>`;
+}
+
+/** 기록 카드 옆 — 야탑 미니 버튼 (15층+ 또는 해금 후) */
 export function renderEndgameHubButton(save: GameSave): string {
   const unlocked = isEndgameUnlocked(save);
-  if (unlocked) {
-    return `<button type="button" class="town-hub-mini town-hub-mini--endgame town-hub-mini--ready" data-town-sub="endgame" title="균열 · 탑 · 유물 · 각성">
-      <span class="town-hub-mini-icon" aria-hidden="true">🌌</span>
-      <span class="town-hub-mini-body">
-        <strong>차원</strong>
-        <small>균열·탑·각성</small>
-      </span>
+  const spireTest = isSpireTestBypass();
+  if (unlocked || spireTest) {
+    return `<button type="button" class="town-hub-mini town-hub-mini--endgame town-hub-mini--ready" data-town-sub="endgame" title="야탑 · 유물 · 각성">
+      ${endgameMiniBody('야탑', spireTest && !unlocked ? '테스트 등반' : '무한의 탑·각성')}
     </button>`;
   }
 
   const teaser = getEndgameTeaserProgress(save);
   if (!teaser) return '';
 
-  const remain = teaser.steps.filter(s => !s.done).map(s => s.label).join(' · ') || teaser.hint;
-  return `<div class="town-hub-mini town-hub-mini--endgame town-hub-mini--locked" role="status" title="${remain}">
-    <span class="town-hub-mini-icon" aria-hidden="true">🌌</span>
-    <span class="town-hub-mini-body">
-      <strong>차원의 문</strong>
-      <small>${remain}</small>
-    </span>
+  const lore = getEndgameTeaserLore(save);
+  return `<button type="button" class="town-hub-mini town-hub-mini--endgame town-hub-mini--locked" data-town-sub="endgame" title="${teaser.hint}">
+    ${endgameMiniBody('야탑의 문', lore)}
     <span class="town-hub-mini-pct">${teaser.progressPct}%</span>
-  </div>`;
+  </button>`;
 }

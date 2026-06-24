@@ -2,7 +2,7 @@ import {
   configurePixelArtContext, getImage, getSpriteMetrics, loadImage,
 } from '../assets/AssetLoader';
 import { CHAR_MAP } from '../data/characters';
-import { getCharPortraitPath } from '../data/tinyRpgAnim';
+import { getCharPortraitPath, loadTinyRpgManifest } from '../data/tinyRpgAnim';
 import { applyCanvasPixelArtStyle } from './SpriteLoader';
 
 export const PORTRAIT_FORMATION_PX = 58;
@@ -151,4 +151,17 @@ export const PORTRAIT_PARTY_MEMBER_PX = 76;
 /** 모험단 탭 캐릭터 카드 */
 export function paintPartyMemberPortraits(container: HTMLElement) {
   paintPortraitsIn(container, '.party-member-portrait', PORTRAIT_PARTY_MEMBER_PX, { coverScale: 0.82, faceBias: 2 });
+}
+
+export const PORTRAIT_LEADERBOARD_PX = 28;
+
+/** 랭킹 — 모험단 TOP4 레벨 캐릭터 */
+export async function paintLeaderboardPortraits(container: HTMLElement): Promise<void> {
+  await loadTinyRpgManifest();
+  paintPortraitsIn(container, '.lb-portrait', PORTRAIT_LEADERBOARD_PX, { coverScale: 0.8, faceBias: 2 });
+  window.setTimeout(() => {
+    if (container.isConnected) {
+      paintPortraitsIn(container, '.lb-portrait', PORTRAIT_LEADERBOARD_PX, { coverScale: 0.8, faceBias: 2 });
+    }
+  }, 400);
 }

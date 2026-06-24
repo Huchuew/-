@@ -4,6 +4,8 @@ import { GRADE_ORDER } from './equipGrades';
 
 /** 던전 드랍 전용 통합 장신구 */
 export const ACCESSORY_DROP_RATE = 0.009;
+/** 전설급 이상 — 극저확률 */
+export const LEGENDARY_ACCESSORY_DROP_RATE = 0.0012;
 
 interface AccessoryDef {
   id: string;
@@ -62,8 +64,24 @@ const RAW: Omit<AccessoryDef, 'id'>[] = [
   { name: '용의 반지', slot: 'ring', grade: 'sr', regionMin: 15, regionMax: 18, atk: 20, def: 9, hp: 62, atkSpd: 0.034, crit: 0.027 },
   { name: '성검의 목걸이', slot: 'necklace', grade: 'ssr', regionMin: 17, regionMax: 18, atk: 23, def: 13, hp: 88, atkSpd: 0.032, crit: 0.031 },
   { name: '세계수의 유물', slot: 'relic', grade: 'a', regionMin: 10, regionMax: 13, atk: 9, def: 7, hp: 50, atkSpd: 0.012, crit: 0.014 },
-  { name: '균열의 반지', slot: 'ring', grade: 's', regionMin: 13, regionMax: 16, atk: 14, def: 6, hp: 44, atkSpd: 0.03, crit: 0.021 },
+  { name: '균열의 반지', slot: 'ring', grade: 's', regionMin: 13, regionMax: 18, atk: 14, def: 6, hp: 44, atkSpd: 0.03, crit: 0.021 },
   { name: '은빛의 목걸이', slot: 'necklace', grade: 'e', regionMin: 3, regionMax: 6, atk: 3, def: 3, hp: 16, atkSpd: 0.012, crit: 0.007 },
+];
+
+/** 극희귀 전설 장신구 — 야탑·고층 전용 */
+const LEGENDARY_RAW: Omit<AccessoryDef, 'id'>[] = [
+  { name: '야탑 심연의 반지', slot: 'ring', grade: 'ur', regionMin: 18, regionMax: 99, atk: 42, def: 18, hp: 160, atkSpd: 0.055, crit: 0.048 },
+  { name: '무한 등반자의 목걸이', slot: 'necklace', grade: 'ur', regionMin: 18, regionMax: 99, atk: 38, def: 28, hp: 220, atkSpd: 0.04, crit: 0.042 },
+  { name: '별빛 수호 유물', slot: 'relic', grade: 'u1', regionMin: 18, regionMax: 99, atk: 55, def: 35, hp: 280, atkSpd: 0.05, crit: 0.055 },
+  { name: '공허 포식자의 반지', slot: 'ring', grade: 'u1', regionMin: 18, regionMax: 99, atk: 48, def: 22, hp: 200, atkSpd: 0.062, crit: 0.05 },
+  { name: '천공의 눈물', slot: 'necklace', grade: 'u2', regionMin: 18, regionMax: 99, atk: 62, def: 30, hp: 310, atkSpd: 0.045, crit: 0.058 },
+  { name: '창세 신화 유물', slot: 'relic', grade: 'u2', regionMin: 18, regionMax: 99, atk: 70, def: 42, hp: 360, atkSpd: 0.055, crit: 0.06 },
+  { name: '용맥의 왕관 반지', slot: 'ring', grade: 'u3', regionMin: 18, regionMax: 99, atk: 78, def: 38, hp: 340, atkSpd: 0.068, crit: 0.065 },
+  { name: '절대자의 사슬', slot: 'necklace', grade: 'u3', regionMin: 18, regionMax: 99, atk: 72, def: 48, hp: 420, atkSpd: 0.05, crit: 0.062 },
+  { name: '종언의 심장', slot: 'relic', grade: 'u4', regionMin: 18, regionMax: 99, atk: 95, def: 55, hp: 500, atkSpd: 0.06, crit: 0.072 },
+  { name: '황혼 제왕의 반지', slot: 'ring', grade: 'u4', regionMin: 18, regionMax: 99, atk: 88, def: 45, hp: 450, atkSpd: 0.075, crit: 0.078 },
+  { name: '신들의 눈', slot: 'necklace', grade: 'u5', regionMin: 18, regionMax: 99, atk: 105, def: 60, hp: 580, atkSpd: 0.055, crit: 0.08 },
+  { name: '우주의 파편', slot: 'relic', grade: 'u5', regionMin: 18, regionMax: 99, atk: 120, def: 70, hp: 650, atkSpd: 0.065, crit: 0.085 },
 ];
 
 export const UNIVERSAL_ACCESSORIES: AccessoryDef[] = RAW.map((r, i) => ({
@@ -71,7 +89,14 @@ export const UNIVERSAL_ACCESSORIES: AccessoryDef[] = RAW.map((r, i) => ({
   id: `uni_acc_${String(i + 1).padStart(2, '0')}`,
 }));
 
-export const UNIVERSAL_ACCESSORY_RECIPES: EquipRecipe[] = UNIVERSAL_ACCESSORIES.map(a => ({
+export const LEGENDARY_ACCESSORIES: AccessoryDef[] = LEGENDARY_RAW.map((r, i) => ({
+  ...r,
+  id: `leg_acc_${String(i + 1).padStart(2, '0')}`,
+}));
+
+export const ALL_ACCESSORY_DEFS = [...UNIVERSAL_ACCESSORIES, ...LEGENDARY_ACCESSORIES];
+
+export const UNIVERSAL_ACCESSORY_RECIPES: EquipRecipe[] = ALL_ACCESSORY_DEFS.map(a => ({
   id: a.id,
   name: a.name,
   slot: a.slot,
@@ -91,9 +116,23 @@ export function getAccessoriesForRegion(regionId: number): AccessoryDef[] {
   return UNIVERSAL_ACCESSORIES.filter(a => regionId >= a.regionMin && regionId <= a.regionMax);
 }
 
+export function getLegendaryAccessoriesForRegion(regionId: number): AccessoryDef[] {
+  if (regionId < 18) return [];
+  return LEGENDARY_ACCESSORIES;
+}
+
+export function isLegendaryGrade(grade: string): boolean {
+  return ['ur', 'u1', 'u2', 'u3', 'u4', 'u5', 'u6', 'u7', 'u8', 'u9', 'ua'].includes(grade);
+}
+
 export function pickRandomAccessoryDrop(regionId: number): AccessoryDef | null {
+  const legPool = getLegendaryAccessoriesForRegion(regionId);
+  if (legPool.length && Math.random() < LEGENDARY_ACCESSORY_DROP_RATE) {
+    return legPool[Math.floor(Math.random() * legPool.length)]!;
+  }
   const pool = getAccessoriesForRegion(regionId);
   if (!pool.length) return null;
+  if (Math.random() > ACCESSORY_DROP_RATE) return null;
   return pool[Math.floor(Math.random() * pool.length)]!;
 }
 

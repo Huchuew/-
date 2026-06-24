@@ -1,7 +1,9 @@
 import type { RegionDef } from '../types';
+import { extendRegionsToMax, MAX_DUNGEON_FLOOR } from './regionsExtended';
 
-export const REGIONS: RegionDef[] = [
-  { id: 1, name: '가락동 스타디움', badge: 'badge_start', badgeName: '시작의 배지', bgTop: '#87ceeb', bgBottom: '#5a9e6f', ground: '#4a8a55', monsterIds: ['goblin', 'slime_green'], bossId: 'boss_goblin_chief' },
+export { MAX_DUNGEON_FLOOR };
+
+const BASE_REGIONS: RegionDef[] = [  { id: 1, name: '가락동 스타디움', badge: 'badge_start', badgeName: '시작의 배지', bgTop: '#87ceeb', bgBottom: '#5a9e6f', ground: '#4a8a55', monsterIds: ['goblin', 'slime_green'], bossId: 'boss_goblin_chief' },
   { id: 2, name: '왕십리', badge: 'badge_steel', badgeName: '강철의 배지', bgTop: '#8899aa', bgBottom: '#556677', ground: '#667788', monsterIds: ['skeleton', 'bat'], bossId: 'boss_iron_knight' },
   { id: 3, name: '건대 화양', badge: 'badge_youth', badgeName: '청춘의 배지', bgTop: '#ffaa88', bgBottom: '#cc6655', ground: '#bb7766', monsterIds: ['wolf', 'goblin'], bossId: 'boss_wolf_king' },
   { id: 4, name: '성신여대', badge: 'badge_faith', badgeName: '신앙의 배지', bgTop: '#eeddff', bgBottom: '#bbaadd', ground: '#aa99cc', monsterIds: ['ghost', 'skeleton'], bossId: 'boss_lich' },
@@ -20,3 +22,5 @@ export const REGIONS: RegionDef[] = [
   { id: 17, name: '옥정', badge: 'badge_jade', badgeName: '옥빛의 배지', bgTop: '#88ddbb', bgBottom: '#44aa77', ground: '#339966', monsterIds: ['jade_golem', 'mage_slime'], bossId: 'boss_jade' },
   { id: 18, name: '모란', badge: 'badge_flower', badgeName: '붉은꽃의 배지', bgTop: '#ff8899', bgBottom: '#cc4455', ground: '#bb5566', monsterIds: ['flower_mon', 'bee'], bossId: 'boss_rose' },
 ];
+
+export const REGIONS: RegionDef[] = extendRegionsToMax(BASE_REGIONS, MAX_DUNGEON_FLOOR);

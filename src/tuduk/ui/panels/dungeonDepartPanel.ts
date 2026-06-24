@@ -2,6 +2,9 @@ import type { GameSave } from '../../types';
 import type { AdventureSystem } from '../../systems/AdventureSystem';
 import { REGIONS } from '../../data/regions';
 import { formatAffixTip, getRegionAffix, getWeeklyAffixLabel } from '../../data/regionAffixes';
+import { getDeepFloorArc } from '../../data/regionArcs';
+import { getNextFloorMilestone } from '../../systems/floorMilestoneSystem';
+import { isEndgameTeaserVisible, isEndgameUnlocked } from '../../systems/EndgameSystem';
 import { formatEpicVariantLabel } from '../../data/epicVariants';
 import { getRegionStory } from '../../data/regionStories';
 import { getMinLevelForFloor } from '../../data/floorProgression';
@@ -15,15 +18,19 @@ import { hasAnyDungeonCampBonus, formatDungeonBonusSummary } from '../../systems
 import { getPendingTycoonSummary } from '../../systems/TycoonExpansionSystem';
 import {
   canDepartAtFloor,
+  canPinShortcutFloor,
   canStartShortcutDev,
   formatShortcutDevDuration,
   getFloorClearCount,
+  getPinnedShortcutFloor,
   getShortcutClearRequired,
   getShortcutDevGoldCost,
   getShortcutDevDurationSec,
   getShortcutDevRemainSec,
+  isPinnedShortcutFloor,
   isShortcutDeveloping,
   isShortcutReady,
+  MAX_SHORTCUT_FLOOR,
   reconcileShortcutDevelopment,
 } from '../../systems/DungeonShortcutSystem';
 
@@ -40,15 +47,34 @@ function renderDepartReadiness(save: GameSave, floor: number): string {
     </div>`;
 }
 
-function renderDepartFloorMeta(floor: number): string {
+function renderDepartGoalHint(save: GameSave, floor: number): string {
+  const parts: string[] = [];
+  if (floor >= 19) {
+    const arc = getDeepFloorArc(floor);
+    if (arc) parts.push(`🌀 ${arc.name}`);
+  }
+  const milestone = getNextFloorMilestone(save);
+  if (milestone && floor >= 19) parts.push(`🏆 ${milestone.label}까지 ${milestone.floor - (save.maxRegion ?? 1)}층`);
+  if (!isEndgameUnlocked(save) && isEndgameTeaserVisible(save)) {
+    parts.push(`🗼 야탑 ${save.maxRegion ?? 1}/18`);
+  }
+  if (!parts.length) return '';
+  return `<p class="hint depart-goal-hint">${parts.join(' · ')}</p>`;
+}
+
+function renderDepartFloorMeta(save: GameSave, floor: number): string {
   const minLv = getMinLevelForFloor(floor);
   const affix = getRegionAffix(floor);
   const weekly = floor >= 3 ? getWeeklyAffixLabel() : '';
   const story = getRegionStory(floor);
   const epicHint = floor >= 10 ? `<p class="hint depart-epic-variant">${formatEpicVariantLabel()}</p>` : '';
+  const arc = getDeepFloorArc(floor);
+  const arcHint = arc ? `<p class="hint depart-arc-hint">${arc.lore}</p>` : '';
   return `<div class="depart-floor-meta">
     ${story ? `<p class="depart-floor-story">${story}</p>` : ''}
+    ${arcHint}
     <p class="hint depart-floor-stats">권장 Lv.<b>${minLv}</b> · ${formatAffixTip(affix)}</p>
+    ${renderDepartGoalHint(save, floor)}
     ${weekly ? `<p class="hint depart-weekly-affix">${weekly}</p>` : ''}
     ${epicHint}
   </div>`;
@@ -67,20 +93,26 @@ export function renderLodgingDepartPanel(
   const departCheck = canDepartAtFloor(save, floor);
   const canDepart = expCheck.ok && departCheck.ok;
 
+  const pinnedFloor = getPinnedShortcutFloor(save);
+  const shortcutCap = Math.min(maxR, MAX_SHORTCUT_FLOOR);
+
   const floorPills = REGIONS.filter(r => r.id <= maxR).map(r => {
     const ready = isShortcutReady(save, r.id);
     const dev = isShortcutDeveloping(save, r.id);
+    const pinned = isPinnedShortcutFloor(save, r.id);
     const active = r.id === floor;
+    const noShortcut = r.id > MAX_SHORTCUT_FLOOR;
     let tag = '';
     if (r.id === 1) tag = '기본';
-    else if (ready) tag = '숏컷';
+    else if (noShortcut) tag = '직행';
+    else if (ready) tag = pinned ? '📌숏컷' : '숏컷';
     else if (dev) tag = '개발';
-    else {
+    else if (r.id <= shortcutCap) {
       const need = getShortcutClearRequired(r.id);
       const have = getFloorClearCount(save, r.id);
       if (need > 0) tag = `${have}/${need}`;
     }
-    return `<button type="button" class="depart-floor-pill ${active ? 'active' : ''} ${ready ? 'ready' : ''} ${dev ? 'dev' : ''}"
+    return `<button type="button" class="depart-floor-pill ${active ? 'active' : ''} ${ready ? 'ready' : ''} ${dev ? 'dev' : ''} ${pinned ? 'pinned' : ''}"
       data-depart-floor="${r.id}" aria-pressed="${active}">
       <span class="depart-floor-pill-num">${r.id}</span>
       <span class="depart-floor-pill-name">${r.name}</span>
@@ -91,6 +123,8 @@ export function renderLodgingDepartPanel(
   let detailBody = '';
   if (floor === 1) {
     detailBody = '<p class="depart-detail-desc">1층부터 일반 원정을 시작합니다. 클리어 후 다음 층으로 진행해요.</p>';
+  } else if (floor > MAX_SHORTCUT_FLOOR) {
+    detailBody = `<p class="depart-detail-desc">${MAX_SHORTCUT_FLOOR + 1}층은 최종 구간이라 숏컷 없이 해당 층에서 바로 원정을 시작합니다.</p>`;
   } else {
     const need = getShortcutClearRequired(floor);
     const have = getFloorClearCount(save, floor);
@@ -159,6 +193,14 @@ export function renderLodgingDepartPanel(
       ? departCheck.reason
       : '';
 
+  const pinCheck = canPinShortcutFloor(save, floor);
+  const isPinned = isPinnedShortcutFloor(save, floor);
+  const pinBlock = pinCheck.ok
+    ? `<button type="button" class="btn-sm ${isPinned ? 'gold' : 'support'} depart-pin-btn" data-pin-shortcut="${floor}">
+        ${isPinned ? '📌 고정 해제' : '📌 이 층 고정 (모험단 탭 출발)'}
+      </button>`
+    : '';
+
   const phase2Hint = floor >= 10 && !shouldShowFloor10Intro(save, floor)
     ? `<p class="hint depart-phase2-hint">⚡ 2막 구간 — 준비도·4인 편성·캠프 던전 버프를 챙기세요</p>`
     : '';
@@ -166,17 +208,19 @@ export function renderLodgingDepartPanel(
   return `<section class="depart-panel">
     <div class="depart-panel-head">
       <h4>출발 층 선택</h4>
-      <span class="badge">최고 ${maxR}층</span>
+      <span class="badge">최고 ${maxR}층 · 숏컷 ${shortcutCap}층까지</span>
     </div>
-    <div class="depart-floor-scroll" role="listbox" aria-label="출발 층">${floorPills}</div>
+    ${pinnedFloor ? `<p class="hint depart-pinned-hint">📌 고정 출발층: <b>${pinnedFloor}층</b> — 모험단 탭에서도 여기서 시작</p>` : ''}
+    <div class="depart-floor-grid" role="listbox" aria-label="출발 층">${floorPills}</div>
     <div class="depart-detail-card" style="--floor-accent:${region?.bgBottom ?? '#445'}">
       <div class="depart-detail-top">
         <span class="depart-detail-floor">${floor}층</span>
         <strong>${region?.name ?? ''}</strong>
       </div>
-      ${renderDepartFloorMeta(floor)}
+      ${renderDepartFloorMeta(save, floor)}
       ${renderDepartReadiness(save, floor)}
       ${detailBody}
+      ${pinBlock}
     </div>
     ${phase2Hint}
     ${hpWarn}

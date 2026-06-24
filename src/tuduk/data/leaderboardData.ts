@@ -1,11 +1,11 @@
 /** 주간 랭킹 규칙·일일 미션·보상 (CPU 길드 제거 — 실유저 랭킹 전용) */
 
 export const LEADERBOARD_RANK_REWARDS: { maxRank: number; gold: number; gems: number; label: string }[] = [
-  { maxRank: 1, gold: 25_000, gems: 12, label: '🥇 챔피언' },
-  { maxRank: 2, gold: 15_000, gems: 8, label: '🥈 준우승' },
-  { maxRank: 3, gold: 10_000, gems: 5, label: '🥉 포디움' },
-  { maxRank: 10, gold: 6_000, gems: 3, label: '⭐ 상위권' },
-  { maxRank: 99, gold: 2_500, gems: 1, label: '✓ 참가 보상' },
+  { maxRank: 1, gold: 25_000, gems: 12, label: '👑 챔피언 보상' },
+  { maxRank: 2, gold: 15_000, gems: 8, label: '🥈 2위 보상' },
+  { maxRank: 3, gold: 10_000, gems: 5, label: '🥉 3위 보상' },
+  { maxRank: 10, gold: 6_000, gems: 3, label: '⭐ 상위권 보상' },
+  { maxRank: 99, gold: 2_500, gems: 1, label: '🎁 참가 보상' },
 ];
 
 export interface LeaderboardWeeklyMod {

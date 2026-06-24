@@ -14,6 +14,9 @@ import { renderBondSynergyBlock } from './bondSynergyBlock';
 import { formatPartySynergyFull, getCharTraitLabels } from '../../systems/partySynergy';
 import { isPartyFullyHealed } from '../../systems/RestHealingSystem';
 import {
+  canDepartAtFloor, getPinnedShortcutFloor, resolveDepartFloor,
+} from '../../systems/DungeonShortcutSystem';
+import {
   canAssignSupport, computeCharStats, formatBufferSummary, getBufferContributions,
   getPartyDps, getPartyDpsBreakdown, getRegionAvgDef, isSupportChar,
 } from '../../systems/StatCalculator';
@@ -102,6 +105,16 @@ export function renderPartyPanel(
   const atLodging = adv.isAtLodging();
   const showRunStrip = inExpedition || returning;
   const expCheck = canStartExpedition(save);
+  const departFloor = resolveDepartFloor(save);
+  const departCheck = canDepartAtFloor(save, departFloor);
+  const departLabel = departFloor === 1
+    ? '던전 입장 · 1층부터'
+    : departCheck.useShortcut
+      ? `던전 입장 · 숏컷 ${departFloor}층`
+      : `던전 입장 · ${departFloor}층`;
+  const pinnedHint = getPinnedShortcutFloor(save) === departFloor && departFloor > 1
+    ? '<p class="hint">📌 고정 숏컷으로 출발합니다</p>'
+    : '';
 
   const dpsById = new Map(getPartyDpsBreakdown(save, regionDef).map(e => [e.id, e]));
   const dpsRows = getFormationDisplayOrder(save)
@@ -167,9 +180,13 @@ export function renderPartyPanel(
     ${atLodging ? `
       <div class="party-dungeon-entry">
         <button class="btn-primary expedition-btn" id="party-start-expedition" type="button"
-          ${expCheck.ok ? '' : 'disabled'}>던전 입장</button>
+          data-depart-target="${departFloor}"
+          ${expCheck.ok && departCheck.ok ? '' : 'disabled'}>${departLabel}</button>
+        ${pinnedHint}
         ${!expCheck.ok
     ? `<p class="hint warn" ${hasPartyIncapacitated(save) ? 'id="party-expedition-incap"' : ''}>${expCheck.reason}</p>`
+    : !departCheck.ok
+      ? `<p class="hint warn">${departCheck.reason}</p>`
     : ''}
         ${!isPartyFullyHealed(save) ? `<p class="hint warn">HP 미회복 — 회복 후 출발 권장</p>` : ''}
       </div>` : ''}

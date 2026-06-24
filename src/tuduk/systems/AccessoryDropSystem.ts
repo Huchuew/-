@@ -1,11 +1,19 @@
 import type { GameSave } from '../types';
 import {
-  ACCESSORY_DROP_RATE, pickRandomAccessoryDrop, UNIVERSAL_ACCESSORY_RECIPES,
+  isLegendaryGrade,
+  pickRandomAccessoryDrop,
+  UNIVERSAL_ACCESSORY_RECIPES,
 } from '../data/universalAccessories';
+import { GRADE_LABEL } from '../data/equipment';
 import { newItemUid } from './EquipmentSystem';
 
-export function rollAccessoryDrop(save: GameSave, regionId: number): string | null {
-  if (Math.random() > ACCESSORY_DROP_RATE) return null;
+export interface AccessoryDropResult {
+  name: string;
+  grade: string;
+  legendary: boolean;
+}
+
+export function rollAccessoryDrop(save: GameSave, regionId: number): AccessoryDropResult | null {
   const picked = pickRandomAccessoryDrop(regionId);
   if (!picked) return null;
   const recipe = UNIVERSAL_ACCESSORY_RECIPES.find(r => r.id === picked.id);
@@ -17,5 +25,9 @@ export function rollAccessoryDrop(save: GameSave, regionId: number): string | nu
     slot: recipe.slot,
     level: 0,
   });
-  return recipe.name;
+  const legendary = isLegendaryGrade(recipe.grade);
+  if (legendary) {
+    save.pendingAccessoryCelebrate = { name: recipe.name, grade: recipe.grade };
+  }
+  return { name: recipe.name, grade: GRADE_LABEL[recipe.grade] ?? recipe.grade, legendary };
 }

@@ -12,6 +12,8 @@ import { reconcileFormation } from '../systems/FormationSystem';
 import { GROWTH_NODES } from '../data/growthTrees';
 import { isPrestigeNodeId } from '../data/prestigeBranchBuilder';
 import { ensureLeaderboardState } from '../systems/LeaderboardSystem';
+import { ensureRivalDuel } from '../systems/RivalDuelSystem';
+import { reconcileSpireAccess } from '../systems/SpireRunSystem';
 import { scheduleProfileSync } from '../services/PlayerProfileService';
 import { PRESTIGE_BRANCH_DEFS } from '../data/prestigeBranchData';
 import { normalizeBagItemSlots, sanitizeEquipment } from '../systems/EquipmentSystem';
@@ -26,12 +28,26 @@ import { ensureTycoon } from '../systems/TycoonExpansionSystem';
 import { ensureCharStatus } from '../systems/CharacterStatusSystem';
 import { defaultOnboarding, ensureOnboarding } from '../systems/OnboardingSystem';
 import { REBIRTH_MIGRATION_SAVE_VERSION, applyRebirthV7Migration, collectAllRebirthMarks, stashRebirthMarksForFreshStart } from '../systems/RebirthMarkSystem';
+import { applySeasonLeaderboardClamp } from '../systems/seasonLeaderboardClamp';
 
 export const SAVE_VERSION = '7.0.0';
 export const MIN_SAVE_VERSION = '3.2.0';
-export const STARTER_GOLD = 150_000;
+export const STARTER_GOLD = 35_000;
 const KEY = 'tuduk_rpg_save';
 const RESET_TO_STARTER_KEY = 'tuduk_reset_to_starter';
+
+/** 멀티탭 — 다른 탭이 먼저 저장한 lastOnline 반영 (오프라인 중복 방지) */
+export function refreshLastOnlineFromStorage(save: GameSave): void {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const stored = JSON.parse(raw) as Partial<GameSave>;
+    const storedLast = Number(stored.lastOnline ?? 0);
+    if (Number.isFinite(storedLast) && storedLast > (save.lastOnline ?? 0)) {
+      save.lastOnline = storedLast;
+    }
+  } catch { /* ignore */ }
+}
 
 export function isResetToStarterPending(): boolean {
   try {
@@ -98,6 +114,7 @@ function migrateCharId(save: GameSave, from: string, to: string): void {
     delete save.charStatus.incapacitatedUntil[from];
   }
   for (const item of save.bag) {
+    if (!item.uid) item.uid = `eq_${item.id}`;
     if (item.id.startsWith(`${from}_`)) item.id = item.id.replace(`${from}_`, `${to}_`);
     if (item.uid.includes(from)) item.uid = item.uid.split(from).join(to);
   }
@@ -150,6 +167,16 @@ export function getStarterWeaponId(charId: string): string | null {
 }
 
 export function reconcileSave(save: GameSave): GameSave {
+  if (!Array.isArray(save.owned)) {
+    save.owned = save.party?.length ? [...save.party] : ['huchu'];
+  }
+  if (!Array.isArray(save.party)) save.party = [];
+  if (!Array.isArray(save.bag)) save.bag = [];
+  if (!Number.isFinite(save.gold)) save.gold = 0;
+  if (!Number.isFinite(save.gems)) save.gems = 5;
+  if (!Number.isFinite(save.lastOnline) || save.lastOnline <= 0 || save.lastOnline > Date.now() + 60_000) {
+    save.lastOnline = Date.now();
+  }
   const badgeMax = (save.badges?.length ?? 0) > 0
     ? Math.max(...save.badges.map(b => b + 1))
     : 1;
@@ -226,6 +253,9 @@ export function reconcileSave(save: GameSave): GameSave {
   normalizeBagItemSlots(save);
   reconcileFormation(save);
   ensureLeaderboardState(save);
+  ensureRivalDuel(save);
+  reconcileSpireAccess(save);
+  applySeasonLeaderboardClamp(save);
   return save;
 }
 
@@ -319,8 +349,16 @@ export function createDefaultSave(): GameSave {
 }
 
 function parseVersion(v: string): number {
-  const parts = v.split('.').map(Number);
+  const clean = (v.split('-')[0] ?? v).trim();
+  const parts = clean.split('.').map(Number);
+  if (parts.some(p => !Number.isFinite(p))) return 0;
   return (parts[0] ?? 0) * 10000 + (parts[1] ?? 0) * 100 + (parts[2] ?? 0);
+}
+
+function isSaveVersionValid(version: string | undefined): boolean {
+  const parsed = parseVersion(version ?? '0');
+  if (!Number.isFinite(parsed) || parsed <= 0) return false;
+  return parsed >= parseVersion(MIN_SAVE_VERSION);
 }
 
 function migrateSave(parsed: Partial<GameSave>, starterId: string): GameSave {
@@ -445,10 +483,6 @@ function parseSave(raw: string): GameSave | null {
     return migrateSave(parsed, starterId);
   } catch { /* ignore */ }
   return null;
-}
-
-function isSaveVersionValid(version: string | undefined): boolean {
-  return parseVersion(version ?? '0') >= parseVersion(MIN_SAVE_VERSION);
 }
 
 export function loadSave(): GameSave | null {

@@ -8,7 +8,6 @@ type NodeIn = {
 
 function treeMaterialMult(prefix: string): number {
   if (prefix.endsWith('_pr')) return 12;
-  if (prefix.endsWith('_sw') || prefix.endsWith('_df')) return 6;
   return 1;
 }
 

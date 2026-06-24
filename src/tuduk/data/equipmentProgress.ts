@@ -141,7 +141,7 @@ export function getNextCraftRecipeId(save: GameSave, charId: string, recipeIds: 
 
 
 
-/** 다음 티어 제작 전 이전 장비 MAX 강화 필요 */
+/** 다음 티어 제작 전 이전 장비 MAX 강화 + UR→초월 시 ★3 각성 필요 */
 
 export function isPrevTierMaxEnhanced(
 
@@ -163,7 +163,17 @@ export function isPrevTierMaxEnhanced(
 
   if (!item || item.id !== prevId) return false;
 
-  return item.level >= getMaxEnhanceForRecipeId(prevId);
+  if (item.level < getMaxEnhanceForRecipeId(prevId)) return false;
+
+  const nextRecipe = RECIPE_MAP[nextRecipeId];
+
+  if (nextRecipe && item.grade === 'ur' && nextRecipe.grade.startsWith('u')) {
+
+    return (item.awakenLevel ?? 0) >= 3;
+
+  }
+
+  return true;
 
 }
 
@@ -182,6 +192,26 @@ export function getCraftBlockReason(
   const prevName = prevId ? RECIPE_MAP[prevId]?.name : '이전 장비';
 
   const need = prevId ? getMaxEnhanceForRecipeId(prevId) : 3;
+
+  const slot = prevId ? RECIPE_MAP[prevId]?.slot : undefined;
+
+  const prevItem = slot ? getItemForCharSlot(save, charId, slot) : null;
+
+  const nextRecipe = RECIPE_MAP[nextRecipeId];
+
+  if (
+
+    prevItem && prevItem.id === prevId && prevItem.level >= need
+
+    && prevItem.grade === 'ur' && nextRecipe?.grade.startsWith('u')
+
+    && (prevItem.awakenLevel ?? 0) < 3
+
+  ) {
+
+    return `${prevName ?? '이전 장비'} ★3 각성 후 초월 제작 가능`;
+
+  }
 
   return `${prevName ?? '이전 장비'} +${need} 강화 후 제작 가능`;
 

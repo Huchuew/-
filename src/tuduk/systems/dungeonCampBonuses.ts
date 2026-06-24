@@ -13,7 +13,9 @@ const STACK_BONUS: Record<CampBuildingId, Partial<DungeonCampBonuses>> = {
   workshop: { matDropMult: 0.11 },
   /** 치유 샘 — 대폭 너프: 스택당 최대 HP 0.25%만 회복 */
   spring: { waveHealPct: 0.0025 },
-  mine: {}, rare_mine: {}, lab: {}, herb: {}, smelter: {}, clinic: {}, inn: {}, kitchen: {}, warehouse: {}, guild: {},
+  mine: {}, rare_mine: {}, lab: {}, herb: {}, smelter: {}, lumber_mill: {},
+  spirit_loom: {}, legend_forge: {}, void_cauldron: {},
+  clinic: {}, inn: {}, kitchen: {}, warehouse: {}, guild: {},
 };
 
 const STACK_LABEL: Record<CampBuildingId, string> = {
@@ -24,7 +26,9 @@ const STACK_LABEL: Record<CampBuildingId, string> = {
   watchtower: '🎯 치명',
   workshop: '📦 재료',
   spring: '💧 웨이브 HP',
-  mine: '', rare_mine: '', lab: '', herb: '', smelter: '', clinic: '', inn: '', kitchen: '', warehouse: '', guild: '',
+  mine: '', rare_mine: '', lab: '', herb: '', smelter: '', lumber_mill: '',
+  spirit_loom: '', legend_forge: '', void_cauldron: '',
+  clinic: '', inn: '', kitchen: '', warehouse: '', guild: '',
 };
 
 export const DUNGEON_CAMP_BUILDING_IDS = CAMP_DUNGEON_BUILDINGS.map(b => b.id);

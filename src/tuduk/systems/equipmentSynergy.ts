@@ -20,14 +20,23 @@ export function computeEquipSynergy(save: GameSave, charId: string): SynergyRepo
   const st = save.chars[charId];
   if (!st) return rep;
 
-  const equipped: { recipe: EquipRecipe; slot: string }[] = [];
+  const equipped: { recipe: EquipRecipe; slot: string; awakenLevel: number }[] = [];
   for (const [slot, uid] of Object.entries(st.equipped)) {
     if (!uid) continue;
     const item = save.bag.find(b => b.uid === uid);
     const recipe = item ? RECIPE_MAP[item.id] : undefined;
-    if (recipe) equipped.push({ recipe, slot });
+    if (recipe) equipped.push({ recipe, slot, awakenLevel: item?.awakenLevel ?? 0 });
   }
   if (!equipped.length) return rep;
+
+  const awakenStars = equipped.reduce((sum, e) => sum + e.awakenLevel, 0);
+  if (awakenStars > 0) {
+    const bonus = 1 + awakenStars * 0.05;
+    rep.atkMult *= bonus;
+    rep.defMult *= bonus;
+    rep.hpMult *= bonus;
+    rep.lines.push(`★각성 ${awakenStars} — ATK/DEF/HP +${awakenStars * 5}%`);
+  }
 
   const setIds = new Set(equipped.map(e => e.recipe.setId).filter(Boolean));
   for (const setId of setIds) {

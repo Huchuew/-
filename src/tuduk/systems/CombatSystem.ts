@@ -143,7 +143,8 @@ export function applyDamageToEnemy(enemy: CombatEntity, rawDmg: number): number 
   }
   if (dmg > 0) {
     enemy.hp = Math.max(0, enemy.hp - dmg);
-    if (enemy.hp / enemy.maxHp < 0.3 && !enemy.enraged && enemy.id.includes('boss')) {
+    const maxHp = Math.max(1, enemy.maxHp);
+    if (enemy.hp / maxHp < 0.3 && !enemy.enraged && enemy.id.includes('boss')) {
       enemy.enraged = true;
       enemy.atk = Math.floor(enemy.atk * 1.4);
       enemy.atkSpd *= 1.25;

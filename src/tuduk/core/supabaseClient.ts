@@ -13,8 +13,17 @@ export type PlayerProfileRow = {
   weekly_score: number;
   week_id: string;
   total_kills: number;
+  touch_count?: number;
+  party_elites?: PartyEliteSnapshot[] | null;
+  spire_best?: number;
   updated_at: string;
   created_at: string;
+};
+
+export type PartyEliteSnapshot = {
+  charId: string;
+  level: number;
+  name: string;
 };
 
 let client: SupabaseClient | null = null;

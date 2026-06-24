@@ -7,10 +7,13 @@ import { BattleRenderer } from './BattleRenderer';
 import { applyCanvasPixelArtStyle } from './SpriteLoader';
 import { getBattleSceneLayout } from './battleSceneLayout';
 import { StageBackgroundRenderer, invalidateStageBackgroundCache } from './StageBackgroundRenderer';
+import { drawSpireTowerScene, preloadSpireTowerAssets } from './SpireTowerRenderer';
+import { drawRivalDuelBackground } from './RivalDuelBackground';
 import { LodgingRenderer } from './LodgingRenderer';
 import { getExpeditionPotions } from '../systems/PotionInventory';
 import { EXPEDITION_POTION_CARRY } from '../types';
 import { isBossGateReady } from '../systems/floorPacing';
+import type { RivalDuelResult } from '../systems/RivalDuelSystem';
 
 export class AdventureRenderer {
   private ctx: CanvasRenderingContext2D;
@@ -93,8 +96,8 @@ export class AdventureRenderer {
     const hudSafeBottom = hudH;
     const bottomInset = this.getCombatBottomInset(adv, h);
     const animT = this.animTime;
-    const scrollX = adv.backgroundScrollX;
-    const moving = adv.isBackgroundMoving();
+    const scrollX = adv.isRivalDuelActive() ? 0 : adv.backgroundScrollX;
+    const moving = adv.isRivalDuelActive() ? false : adv.isBackgroundMoving();
     const shakeAmt = adv.vfx.screenShake;
     if (shakeAmt > 0.01) {
       ctx.save();
@@ -103,12 +106,16 @@ export class AdventureRenderer {
       ctx.translate(px, py);
     }
 
-    const sceneLayout = adv.isTraveling() && adv.travelFromId
-      ? getBattleSceneLayout(w, h, adv.travelFromId)
-      : getBattleSceneLayout(w, h, reg.id);
+    const sceneLayout = adv.isRivalDuelActive()
+      ? drawRivalDuelBackground(ctx, w, h, hudH)
+      : adv.isTraveling() && adv.travelFromId
+        ? getBattleSceneLayout(w, h, adv.travelFromId)
+        : getBattleSceneLayout(w, h, reg.id);
     const { groundY } = sceneLayout;
 
-    if (adv.isTraveling() && adv.travelFromId && adv.travelToId) {
+    if (adv.isRivalDuelActive()) {
+      // 결투장 배경은 sceneLayout 계산 시 drawRivalDuelBackground에서 그림
+    } else if (adv.isTraveling() && adv.travelFromId && adv.travelToId) {
       const fromReg = REGIONS.find(r => r.id === adv.travelFromId) ?? reg;
       this.stageBg.draw(ctx, {
         canvasW: w, canvasH: h, scrollX, regionId: fromReg.id, layout: sceneLayout,
@@ -117,6 +124,13 @@ export class AdventureRenderer {
         travelToRegionId: adv.travelToId,
         animTime: animT,
       });
+    } else if (adv.isInSpireRun() || adv.isSpireReturnInProgress()) {
+      void preloadSpireTowerAssets();
+      drawSpireTowerScene(ctx, w, h, {
+        scrollX,
+        animTime: animT,
+        floor: adv.save.spireRun?.floor ?? 1,
+      });
     } else {
       this.stageBg.draw(ctx, {
         canvasW: w, canvasH: h, scrollX, regionId: reg.id, layout: sceneLayout,
@@ -124,7 +138,9 @@ export class AdventureRenderer {
       });
     }
 
-    this.drawBattleGroundStrip(w, sceneLayout.horizonY, groundY, moving ? scrollX : 0, reg.id);
+    if (!adv.isRivalDuelActive()) {
+      this.drawBattleGroundStrip(w, sceneLayout.horizonY, groundY, moving ? scrollX : 0, reg.id);
+    }
 
     const vfx = adv.vfx;
     this.battle.drawBattlefield(
@@ -173,6 +189,10 @@ export class AdventureRenderer {
       this.drawCombatHud(adv, w, h, hudH);
     }
 
+    if (adv.hasRivalDuelResultPending() && adv.rivalDuelResultPending) {
+      this.drawRivalDuelResultBanner(adv.rivalDuelResultPending, w, h, hudH);
+    }
+
     for (const ev of adv.events) {
       if (ev.life < 0.08) continue;
       const px = ev.x * w;
@@ -195,7 +215,10 @@ export class AdventureRenderer {
       ctx.fillStyle = '#ffffffcc';
       ctx.font = `bold ${Math.max(10, h * 0.04)}px Outfit, sans-serif`;
       const runDots = '.'.repeat(1 + Math.floor(this.animTime * 4) % 3);
-      ctx.fillText(`달리는 중${runDots}`, w / 2, hudH + 28);
+      const walkLabel = adv.isInSpireRun()
+        ? `야탑 등반 중${runDots}`
+        : `달리는 중${runDots}`;
+      ctx.fillText(walkLabel, w / 2, hudH + 28);
     }
 
     if (adv.phase === 'defeat' || adv.isDefeatRestActive()) {
@@ -312,9 +335,10 @@ export class AdventureRenderer {
       ? `${getExpeditionPotions(adv.save)}/${EXPEDITION_POTION_CARRY}`
       : '';
     const codexPct = Math.floor(adv.getCodexPercent(adv.save.currentRegion) * 100);
-    const bossHint = adv.isInExpedition() && !isBossGateReady(adv.save, adv.save.currentRegion, adv.getCodexPercent(adv.save.currentRegion))
-      ? `보스게이트 ${codexPct}%`
-      : '';
+    const bossHint = adv.isInSpireRun() ? ''
+      : adv.isInExpedition() && !isBossGateReady(adv.save, adv.save.currentRegion, adv.getCodexPercent(adv.save.currentRegion))
+        ? `보스게이트 ${codexPct}%`
+        : '';
 
     ctx.save();
     ctx.textAlign = 'right';
@@ -446,6 +470,51 @@ export class AdventureRenderer {
 
   private drawTravelOverlay(adv: AdventureSystem, w: number, h: number, hudH: number) {
     const ctx = this.ctx;
+    if (adv.isSpireReturnInProgress()) {
+      const floor = adv.save.spireRun?.floor ?? 1;
+      const remain = adv.getSpireReturnRemainingSec();
+      const prog = adv.getTravelProgress();
+      const cx = w / 2;
+      const panelW = Math.min(w - 40, 300);
+      const panelH = 72;
+      const px = (w - panelW) / 2;
+      const py = hudH + 18;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(12, 8, 22, 0.88)';
+      ctx.strokeStyle = 'rgba(180, 140, 255, 0.5)';
+      ctx.lineWidth = 2;
+      this.roundRect(px, py, panelW, panelH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      const titleSize = Math.max(11, Math.min(13, h * 0.034));
+      const subSize = Math.max(9, Math.min(11, h * 0.028));
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${titleSize}px Outfit, sans-serif`;
+      ctx.fillStyle = '#e8ddff';
+      ctx.fillText(`🗼 야탑 ${floor}층  →  🏠 마을`, cx, py + 22);
+      ctx.font = `${subSize}px Outfit, sans-serif`;
+      ctx.fillStyle = '#bbaadd';
+      ctx.fillText(`귀환 중… ${remain}초`, cx, py + 40);
+
+      const barX = px + 16;
+      const barW = panelW - 32;
+      const barY = py + panelH - 16;
+      const barH = 6;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      this.roundRect(barX, barY, barW, barH, 3);
+      ctx.fill();
+      const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+      grad.addColorStop(0, '#6644aa');
+      grad.addColorStop(1, '#bb88ff');
+      ctx.fillStyle = grad;
+      this.roundRect(barX, barY, Math.max(barH, barW * prog), barH, 3);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
     const fromReg = REGIONS.find(r => r.id === adv.travelFromId);
     const toReg = REGIONS.find(r => r.id === adv.travelToId);
     const prog = adv.getTravelProgress();
@@ -841,6 +910,43 @@ export class AdventureRenderer {
       ctx.arc(0, 0, len * 0.35, 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.restore();
+  }
+
+  private drawRivalDuelResultBanner(result: RivalDuelResult, w: number, h: number, hudH: number) {
+    const ctx = this.ctx;
+    const cx = w / 2;
+    const cy = hudH + Math.round(h * 0.16);
+    const title = result.won ? '🏆 격파 성공!' : '💀 격파 실패';
+    const sub = result.won && result.gold != null
+      ? `🪙 +${result.gold.toLocaleString()} · SP +${result.sp ?? 0}`
+      : result.nickname;
+    const titleFs = Math.max(16, Math.min(22, h * 0.07));
+    const subFs = Math.max(11, Math.min(14, h * 0.042));
+    ctx.save();
+    ctx.fillStyle = 'rgba(8, 6, 18, 0.55)';
+    const padX = 18;
+    const padY = 12;
+    ctx.font = `bold ${titleFs}px Outfit, sans-serif`;
+    const tw = Math.max(ctx.measureText(title).width, ctx.measureText(sub).width);
+    const boxW = tw + padX * 2;
+    const boxH = titleFs + subFs + padY * 2 + 8;
+    const bx = cx - boxW / 2;
+    const by = cy - boxH / 2;
+    this.roundRect(bx, by, boxW, boxH, 10);
+    ctx.fill();
+    ctx.strokeStyle = result.won ? '#ffcc8844' : '#ff666644';
+    ctx.lineWidth = 1.5;
+    this.roundRect(bx, by, boxW, boxH, 10);
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${titleFs}px Outfit, sans-serif`;
+    ctx.fillStyle = result.won ? '#ffeeaa' : '#ffaaaa';
+    ctx.fillText(title, cx, by + padY + titleFs * 0.45);
+    ctx.font = `bold ${subFs}px Outfit, sans-serif`;
+    ctx.fillStyle = result.won ? '#c8f0c8' : '#ddcccc';
+    ctx.fillText(sub, cx, by + boxH - padY - subFs * 0.45);
     ctx.restore();
   }
 

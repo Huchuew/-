@@ -41,6 +41,7 @@ export function renderSettingsPanel(host: PanelHost, save: GameSave, prefix = ''
         <input type="text" class="survey-input" id="settings-player-nick" maxlength="10"
           value="${getPlayerNickname(save)}" autocomplete="off" />
       </label>
+      <p class="hint">닉네임 변경 시 💎${GEM_COST.nicknameChange} · 모험단 이름은 무료</p>
       <p class="survey-field-error hidden" id="settings-profile-error" role="alert"></p>
       <button type="button" class="btn-sm gold" id="settings-save-profile">프로필 저장 · 랭킹 반영</button>
     </div>
@@ -184,12 +185,25 @@ export function renderSettingsPanel(host: PanelHost, save: GameSave, prefix = ''
     }
     const ids = normalizeTeamIdentity(teamInput?.value ?? '', nickInput?.value ?? '', save.homeStationId);
     if (!ids.playerNickname) return;
+    const prevNick = getPlayerNickname(save);
+    const nickChanged = ids.playerNickname !== prevNick;
+    if (nickChanged) {
+      if (save.gems < GEM_COST.nicknameChange) {
+        if (errEl) {
+          errEl.textContent = `닉네임 변경에 💎${GEM_COST.nicknameChange}이 필요합니다 (보유 ${save.gems})`;
+          errEl.classList.remove('hidden');
+        }
+        audio.playFail();
+        return;
+      }
+    }
     if (errEl) errEl.classList.add('hidden');
     const btn = host.panelEl.querySelector('#settings-save-profile') as HTMLButtonElement | null;
     if (btn) btn.disabled = true;
     void updatePlayerIdentity(save, ids.playerNickname, ids.adventureTeamName).then(res => {
       if (btn) btn.disabled = false;
       if (res.ok) {
+        if (nickChanged) save.gems -= GEM_COST.nicknameChange;
         audio.playConfirm();
         host.showToast(res.message, true);
         saveGame(save);

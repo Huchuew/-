@@ -151,12 +151,6 @@ const CORE_ACHIEVEMENTS: AchievementDef[] = [
     check: s => (s.stats.adsWatched ?? 0) >= 20 },
 
   // ── 엔드게임 ──
-  { id: 'rift10', name: '차원 개척자', desc: '차원 균열 10층 돌파', reward: 8000, gemReward: 15,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 10 },
-  { id: 'rift25', name: '균열 탐험가', desc: '차원 균열 25층 돌파', reward: 20000, gemReward: 25,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 25 },
-  { id: 'rift50', name: '균열 정복자', desc: '차원 균열 50층 완료', reward: 100000, gemReward: 80,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 50 },
   { id: 'spire10', name: '탑 입문', desc: '무한의 탑 10층 돌파', reward: 5000, gemReward: 8,
     check: s => (s.endgame?.spireBest ?? 0) >= 10 },
   { id: 'spire25', name: '탑 등반가', desc: '무한의 탑 25층 돌파', reward: 12000, gemReward: 20,
@@ -407,17 +401,6 @@ const EXTRA_MILESTONES: AchievementDef[] = [
     check: s => (s.camp?.guildLevel ?? 0) >= 2 },
   { id: 'tycoon_contract10', name: '길드 베테랑', desc: '길드 Lv.3 이상', reward: 12000, gemReward: 15,
     check: s => (s.camp?.guildLevel ?? 0) >= 3 },
-
-  { id: 'rift5', name: '균열 입문', desc: '차원 균열 5층 돌파', reward: 4000, gemReward: 6,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 5 },
-  { id: 'rift15', name: '균열 개척 II', desc: '차원 균열 15층 돌파', reward: 12000, gemReward: 18,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 15 },
-  { id: 'rift20', name: '균열 정복 준비', desc: '차원 균열 20층 돌파', reward: 16000, gemReward: 20,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 20 },
-  { id: 'rift30', name: '차원 탐험가', desc: '차원 균열 30층 돌파', reward: 28000, gemReward: 30,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 30 },
-  { id: 'rift40', name: '차원 지배', desc: '차원 균열 40층 돌파', reward: 50000, gemReward: 45,
-    check: s => (s.endgame?.riftCleared ?? 0) >= 40 },
 
   { id: 'spire5', name: '탑 첫걸음', desc: '무한의 탑 5층 돌파', reward: 2500, gemReward: 4,
     check: s => (s.endgame?.spireBest ?? 0) >= 5 },

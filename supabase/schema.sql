@@ -14,6 +14,9 @@ create table if not exists public.player_profiles (
   weekly_score int not null default 0,
   week_id text not null default '',
   total_kills bigint not null default 0,
+  touch_count bigint not null default 0,
+  spire_best int not null default 0,
+  party_elites jsonb default '[]'::jsonb,
   updated_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );

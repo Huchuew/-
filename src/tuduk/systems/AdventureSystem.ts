@@ -19,12 +19,42 @@ import {
   canDepartAtFloor, getFloorClearCount, recordFloorBossClear, reconcileShortcutDevelopment,
 } from './DungeonShortcutSystem';
 import { markFloor10IntroSeen } from './floor10Intro';
+import { grantFloorMilestones } from './floorMilestoneSystem';
 import { AggroTracker } from './AggroSystem';
 import {
   BOSS_BASE_RATE, BOSS_CLEARED_BASE, BOSS_CLEARED_KILL_STEP, BOSS_MAX_RATE,
   BOSS_PITY_GUARANTEE, BOSS_PITY_STEP, getBossCodexThreshold, getBossSpawnRate,
   groupScaleMult, isRegionCleared, onClearedRegionMobKilled, planEncounter,
 } from './EncounterSystem';
+import {
+  beginSpireRun,
+  canAccessSpire,
+  canStartSpireRun,
+  endSpireRun,
+  getSpireLocationLabel,
+  handleSpireWaveCleared,
+  isInSpireRun,
+  planSpireEncounter,
+} from './SpireRunSystem';
+import type { LeaderboardEntry } from '../services/PlayerProfileService';
+import {
+  canStartRivalDuel,
+  beginRivalDuelAttempt,
+  finishRivalDuelWin,
+  finishRivalDuelLoss,
+  getRivalDuelRemaining,
+  type RivalDuelResult,
+} from './RivalDuelSystem';
+import {
+  isRivalGhostMonsterId,
+  parseRivalGhostCharId,
+  pickRivalSkillLabel,
+  planRivalDuelEncounter,
+  rivalEntryFromRun,
+  serializeRivalRun,
+} from './RivalDuelCombat';
+import { preloadSpireTowerAssets } from '../render/SpireTowerRenderer';
+import { getWeeklySpireModifier } from '../data/endgame/spire';
 import { checkBossPhase } from './bossPhases';
 import {
   getSkillChargeDuration, getSupportSkillCastDuration, inferSkillDelivery,
@@ -268,6 +298,7 @@ export class AdventureSystem {
   /** 귀환 시 현재 층 통과 대기(초) — 0이면 다음 이동 */
   private returnWalkSec = 0;
   isReturningToLodging = false;
+  isSpireReturnTrip = false;
   isLodgingResting = false;
   /** 체크 시 전투 종료 후 숙소 귀환 */
   pendingReturnToLodging = false;
@@ -275,6 +306,8 @@ export class AdventureSystem {
   onPhaseChange?: (p: AdventurePhase) => void;
   onSave?: () => void;
   onRestComplete?: () => void;
+  /** 숙소 도착 완료 — 랭킹 변동 토스트 등 */
+  onLodgingReturn?: () => void;
   /** 18층 보스 클리어 — 축하 모달 표시 (firstClear=true 시 1등 극 연출) */
   onFloor18Celebration?: (firstClear: boolean) => void;
   /** 층별 첫 클리어 — 증강 선택 */
@@ -302,6 +335,13 @@ export class AdventureSystem {
   private warriorRangedUsed = new Set<string>();
   /** 평타 모션 순환 — attack01/02/03 번갈아 재생 */
   private chainEngage = false;
+  /** 라이벌 격파 — 결투장 전투 */
+  private rivalDuelTarget: LeaderboardEntry | null = null;
+  private rivalSkillTimers = new Map<string, number>();
+  /** 결투 종료 — 결과 모달 표시 대기 */
+  rivalDuelResultPending: RivalDuelResult | null = null;
+  /** 결투 승패 모달 */
+  onRivalDuelComplete?: (result: RivalDuelResult) => void;
   private pendingChestMsg = '';
   /** 스킬 바 UI — 최근 사용 스킬 하이라이트 */
   skillBarFlash: Record<string, { nodeId: string; until: number }> = {};
@@ -733,6 +773,203 @@ export class AdventureSystem {
     return true;
   }
 
+  getBossHpPct(): number {
+    const slots = this.getAliveSlots();
+    if (!slots.length) return 1;
+    let hp = 0;
+    let max = 0;
+    for (const s of slots) {
+      hp += s.entity.hp + (s.entity.bossShield ?? 0);
+      max += s.entity.maxHp + Math.floor(s.entity.maxHp * 0.15);
+    }
+    return max > 0 ? hp / max : 1;
+  }
+
+  isRivalDuelActive(): boolean {
+    return !!this.save.rivalDuelRun?.active;
+  }
+
+  hasRivalDuelResultPending(): boolean {
+    return !!this.rivalDuelResultPending;
+  }
+
+  resumeAfterRivalDuelResult(): void {
+    this.rivalDuelResultPending = null;
+    this.returnToLodgingDirect(true);
+  }
+
+  getRivalDuelTarget(): LeaderboardEntry | null {
+    return this.rivalDuelTarget ?? rivalEntryFromRun(this.save);
+  }
+
+  startRivalDuel(rival: LeaderboardEntry): { ok: boolean; reason?: string } {
+    if (this.isInExpedition()) {
+      return { ok: false, reason: '원정 중에는 라이벌 격파를 시작할 수 없어요' };
+    }
+    if (!this.isAtLodging()) {
+      return { ok: false, reason: '숙소에서만 라이벌 격파를 시작할 수 있어요' };
+    }
+    const check = canStartRivalDuel(this.save, rival, false);
+    if (!check.ok) return check;
+
+    const expReady = checkExpeditionReady(this.save);
+    if (!expReady.ok) {
+      return { ok: false, reason: expReady.reason ?? '파티가 원정을 떠날 수 없어요' };
+    }
+
+    this.save.rivalDuelRun = serializeRivalRun(rival);
+    this.rivalDuelTarget = rival;
+
+    if (!this.startRivalDuelExpedition()) {
+      delete this.save.rivalDuelRun;
+      this.rivalDuelTarget = null;
+      return { ok: false, reason: '라이벌 격파 결투장 진입 실패 — 잠시 후 다시 시도해 주세요' };
+    }
+    this.startRivalDuelEncounter();
+    this.startCombat();
+    this.addEvent(0.5, 0.3, `⚔️ ${rival.nickname} 모험단과 결투 시작!`, '#ffaa88', 2.4);
+    return { ok: true };
+  }
+
+  /** 라이벌 격파 전용 원정 — 숏컷·던전 준비 없이 1층 결투장 */
+  private startRivalDuelExpedition(): boolean {
+    if (this.isInExpedition() || !this.isAtLodging()) return false;
+
+    this.pendingReturnToLodging = false;
+    this.save.defeatLog = undefined;
+    clearExpeditionHighlight(this.save);
+    this.save.location = 'dungeon';
+    this.save.inExpedition = true;
+    this.save.currentRegion = 1;
+    resetFloorSessionPacing(this.save, 1);
+    clearExpeditionRunState(this.save);
+    this.currentAffix = getRegionAffix(1);
+    this.resetRunStats();
+    this.resetVfx();
+    this.clearEncounter();
+    this.isBossFight = false;
+    this.isEliteFight = false;
+    this.isEpicFight = false;
+    this.killedThisWave = [];
+    this.waveProcExp = 0;
+    this.pendingTravelRegion = null;
+    this.party = buildPartyCombatants(this.save);
+    syncCombatHp(this.save, this.party);
+    this.isLodgingResting = false;
+    this.backgroundScrollX = 0;
+    this.lastArrivalMessage = '';
+    this.waveStreak = 0;
+    this.chainEngage = false;
+    saveGame(this.save);
+    this.onSave?.();
+    return true;
+  }
+
+  private clearRivalDuelState() {
+    this.rivalDuelTarget = null;
+    this.rivalSkillTimers.clear();
+    if (this.save.rivalDuelRun) {
+      this.save.rivalDuelRun.active = false;
+      delete this.save.rivalDuelRun;
+    }
+  }
+
+  private finishRivalDuelCombat(won: boolean) {
+    const rival = this.getRivalDuelTarget();
+    let result: RivalDuelResult | null = null;
+
+    if (rival) {
+      if (won) {
+        const res = finishRivalDuelWin(this.save, rival);
+        result = {
+          won: true,
+          nickname: rival.nickname,
+          teamName: rival.teamName,
+          gold: res.gold,
+          sp: res.sp,
+          message: res.message,
+          remainingAttempts: getRivalDuelRemaining(this.save),
+        };
+      } else {
+        const res = finishRivalDuelLoss(this.save, rival);
+        result = {
+          won: false,
+          nickname: rival.nickname,
+          teamName: rival.teamName,
+          message: res.message,
+          remainingAttempts: getRivalDuelRemaining(this.save),
+        };
+      }
+    }
+
+    this.clearRivalDuelState();
+    this.vfx.retreatAllMelee();
+    this.clearEncounter();
+    this.killedThisWave = [];
+    this.waveProcExp = 0;
+    this.isBossFight = false;
+    this.isEliteFight = false;
+    this.isEpicFight = false;
+    this.pendingReturnToLodging = false;
+    this.pendingSettlement = null;
+    this.resetRunStats();
+
+    if (!result) {
+      saveGame(this.save);
+      this.returnToLodgingDirect(true);
+      this.onSave?.();
+      return;
+    }
+
+    this.rivalDuelResultPending = result;
+    this.setPhase('loot');
+    this.phaseTimer = 0;
+    this.addEvent(
+      0.5, 0.24,
+      result.won ? '🏆 격파 성공!' : '💀 격파 실패',
+      result.won ? '#ffdd88' : '#ff8888',
+      4,
+      true,
+    );
+    saveGame(this.save);
+    this.onRivalDuelComplete?.(result);
+    this.onSave?.();
+  }
+
+  private tickRivalGhostSkills(dt: number) {
+    if (!this.isRivalDuelActive()) return;
+    for (const enc of this.getAliveSlots()) {
+      const charId = enc.rivalCharId;
+      if (!charId) continue;
+      let elapsed = (this.rivalSkillTimers.get(enc.uid) ?? 0) + dt;
+      const interval = 5.5 + (enc.slot % 3) * 1.2;
+      if (elapsed < interval) {
+        this.rivalSkillTimers.set(enc.uid, elapsed);
+        continue;
+      }
+      this.rivalSkillTimers.set(enc.uid, 0);
+      const target = this.party.filter(p => p.hp > 0).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+      if (!target) continue;
+      const enemy = enc.entity;
+      const skillName = pickRivalSkillLabel(charId);
+      const dmg = Math.floor(
+        enemy.atk * (2.4 + Math.random() * 0.8) * this.getCombatFatigueMult(),
+      );
+      const prevHp = target.hp;
+      target.hp = Math.max(0, target.hp - dmg);
+      markEntityKnockdown(target, prevHp);
+      this.runStats.damageTaken += dmg;
+      this.bumpCharStat(target.id, 'damageTaken', dmg);
+      this.lastHit = { attacker: enemy.name, target: target.name, damage: dmg };
+      onPartyHitGauge(this.save, target.id);
+      const slot = getVisualSlotIndex(this.save, target.id);
+      if (slot >= 0) this.vfx.onPartyHit(slot);
+      this.addEvent(0.28, 0.46, `★${skillName} -${dmg}`, '#ff6688', 1.2, true);
+      this.onAudio?.({ type: 'hurt', magic: enemy.isMagic ?? false, delayMs: 80 });
+      if (this.party.every(p => p.hp <= 0)) this.onPartyWipe();
+    }
+  }
+
   constructor(public save: GameSave) {
     reconcileSave(save);
     ensureLocation(save);
@@ -750,6 +987,9 @@ export class AdventureSystem {
       this.resetVfx();
       this.clearEncounter();
       if (this.phase !== 'travel') this.setPhase('walk');
+      if (isInSpireRun(save)) {
+        void preloadSpireTowerAssets();
+      }
       if (this.isReturningToLodging && !this.returnTripQueue.length && save.currentRegion > 1) {
         for (let r = save.currentRegion - 1; r >= 1; r--) this.returnTripQueue.push(r);
       }
@@ -760,6 +1000,7 @@ export class AdventureSystem {
   syncRuntimeToSave(): void {
     this.save.expeditionRuntime = {
       isReturningToLodging: this.isReturningToLodging,
+      isSpireReturnTrip: this.isSpireReturnTrip,
       returnTripQueue: [...this.returnTripQueue],
       isLodgingResting: this.isLodgingResting,
       pendingTravelRegion: this.pendingTravelRegion,
@@ -777,6 +1018,7 @@ export class AdventureSystem {
     const rt = this.save.expeditionRuntime;
     if (!rt) return;
     this.isReturningToLodging = !!rt.isReturningToLodging;
+    this.isSpireReturnTrip = !!rt.isSpireReturnTrip;
     this.returnTripQueue = [...(rt.returnTripQueue ?? [])];
     this.isLodgingResting = !!rt.isLodgingResting && isAtLodging(this.save);
     this.pendingTravelRegion = rt.pendingTravelRegion ?? null;
@@ -800,6 +1042,7 @@ export class AdventureSystem {
     this.save.currentRegion = 1;
     this.currentAffix = getRegionAffix(1);
     this.isReturningToLodging = false;
+    this.isSpireReturnTrip = false;
     this.returnTripQueue = [];
   }
 
@@ -847,7 +1090,16 @@ export class AdventureSystem {
     return REGIONS.find(r => r.id === this.save.currentRegion) ?? REGIONS[0];
   }
 
+  isInSpireRun(): boolean {
+    return isInSpireRun(this.save);
+  }
+
   getCurrentLocationLabel(): string {
+    if (this.isSpireReturnTrip) {
+      const floor = this.save.spireRun?.floor ?? 1;
+      return `🗼 야탑 ${floor}층 → 🏠 마을`;
+    }
+    if (this.isInSpireRun()) return getSpireLocationLabel(this.save);
     if (this.isAtLodging()) return '🏠 모험숙소';
     if (this.isReturningToLodging) {
       if (this.phase === 'travel' && this.travelFromId && this.travelToId) {
@@ -878,6 +1130,15 @@ export class AdventureSystem {
 
   isTraveling(): boolean {
     return this.phase === 'travel';
+  }
+
+  isSpireReturnInProgress(): boolean {
+    return this.isSpireReturnTrip;
+  }
+
+  getSpireReturnRemainingSec(): number {
+    if (!this.isSpireReturnTrip || this.phase !== 'travel') return 0;
+    return Math.max(0, Math.ceil(this.travelDurationSec * (1 - this.getTravelProgress())));
   }
 
   getReturnWalkRemainingSec(): number {
@@ -1033,6 +1294,7 @@ export class AdventureSystem {
 
   /** 배경 패럴랙스 속도 — 전투·조우 중 정지, 루트·이동 중만 스크롤 */
   getBackgroundScrollSpeed(): number {
+    if (this.isRivalDuelActive()) return 0;
     if (this.isAtLodging()) return 0;
     if (this.phase === 'defeat' || this.isDefeatRestActive() || this.isResting) return 0;
     if (this.phase === 'combat' || this.phase === 'boss' || this.phase === 'encounter') return 0;
@@ -1129,6 +1391,7 @@ export class AdventureSystem {
         this.updateCombat(dt);
         break;
       case 'loot':
+        if (this.rivalDuelResultPending) break;
         if (this.phaseTimer > this.getLootDelay()) {
           this.finishLootAndResume();
         }
@@ -1224,13 +1487,23 @@ export class AdventureSystem {
   }
 
   private startEncounter() {
+    if (this.isRivalDuelActive()) {
+      this.startRivalDuelEncounter();
+      return;
+    }
     const region = this.region;
-    const pathGold = Math.floor(1 + region.id * 0.35);
+    const pathGold = Math.floor(1 + (this.isInSpireRun()
+      ? (this.save.spireRun?.floor ?? 1) * 0.45
+      : region.id * 0.35));
     creditPendingHuntGold(this.save, pathGold);
     this.runStats.goldEarned += pathGold;
-    this.currentAffix = getRegionAffix(region.id);
+    this.currentAffix = this.isInSpireRun()
+      ? getRegionAffix(Math.min(18, this.save.currentRegion))
+      : getRegionAffix(region.id);
     const codexPct = this.getCodexPercent(region.id);
-    let plan = planEncounter(this.save, region.id, codexPct);
+    let plan = this.isInSpireRun()
+      ? planSpireEncounter(this.save)
+      : planEncounter(this.save, region.id, codexPct);
     if (!plan) {
       const normals = getRegionMonsters(region.id).filter(m => !m.isRare);
       const fallback = normals[Math.floor(Math.random() * normals.length)];
@@ -1270,6 +1543,28 @@ export class AdventureSystem {
       this.addEvent(0.5, 0.2, this.waveTwist.banner, '#cc88ff', 1.8, true);
     }
     this.setPhase('encounter');
+  }
+
+  private startRivalDuelEncounter() {
+    const rival = this.getRivalDuelTarget();
+    if (!rival) {
+      this.clearRivalDuelState();
+      this.returnToLodgingDirect(true);
+      return;
+    }
+    beginRivalDuelAttempt(this.save, rival);
+    this.currentAffix = getRegionAffix(Math.min(18, this.save.currentRegion));
+    const plan = planRivalDuelEncounter(rival, this.save);
+    this.isBossFight = false;
+    this.isEliteFight = true;
+    this.isEpicFight = false;
+    this.waveMonsters = plan.monsters;
+    this.encounterSlots = [];
+    this.encounterName = `${rival.teamName}`;
+    this.encounterBanner = `⚔️ ${rival.nickname} 모험단 — 라이벌 격파!`;
+    this.addEvent(0.5, 0.32, this.encounterBanner, '#ff8866', 1.4, true);
+    this.onAudio?.({ type: 'encounter' });
+    this.waveTwist = null;
   }
 
   private resetVfx() {
@@ -1445,6 +1740,7 @@ export class AdventureSystem {
       return {
         uid: entity.instanceUid, def: mon, entity, slot: i,
         isElite: elite || isEpic, isEpic, spiritGauge: isEpic ? 0.35 : 0,
+        rivalCharId: parseRivalGhostCharId(mon.id) ?? undefined,
       };
     });
 
@@ -1503,8 +1799,11 @@ export class AdventureSystem {
   private pickPartyTarget(): EncounterSlot | null {
     const alive = this.getAliveSlots();
     if (!alive.length) return null;
-    return alive.reduce((a, b) =>
-      (a.entity.hp / a.entity.maxHp) < (b.entity.hp / b.entity.maxHp) ? a : b);
+    return alive.reduce((a, b) => {
+      const aMax = Math.max(1, a.entity.maxHp);
+      const bMax = Math.max(1, b.entity.maxHp);
+      return (a.entity.hp / aMax) < (b.entity.hp / bMax) ? a : b;
+    });
   }
 
   private clearEncounter() {
@@ -1593,6 +1892,7 @@ export class AdventureSystem {
     if (!this.encounterSlots.length) return;
     if (!this.getAliveSlots().length) { this.onWaveCleared(); return; }
 
+    this.tickRivalGhostSkills(dt);
     this.tickAffixEffects(dt);
     this.tickAllDots(dt);
     this.tickPartyModifiers(dt);
@@ -1947,6 +2247,10 @@ export class AdventureSystem {
 
   private onPartyWipe() {
     if (this.isReturningToLodging || this.phase === 'travel') return;
+    if (this.isRivalDuelActive()) {
+      this.finishRivalDuelCombat(false);
+      return;
+    }
     const voluntaryReturn = this.pendingReturnToLodging;
     const penaltyRate = getDefeatPenaltyRate(this.save);
     const penaltyGold = Math.floor(this.save.gold * penaltyRate);
@@ -1959,7 +2263,9 @@ export class AdventureSystem {
       sessionGoldForfeited: this.runStats.goldEarned,
       penaltyGold,
       stats: { ...this.runStats },
-      regionName: this.region.name,
+      regionName: this.isInSpireRun()
+        ? `야탑 ${this.save.spireRun?.floor ?? 1}층`
+        : this.region.name,
       affixName: this.currentAffix.name,
       affixTip: formatAffixTip(this.currentAffix),
       lastHit: this.lastHit,
@@ -1984,12 +2290,16 @@ export class AdventureSystem {
     this.waveProcExp = 0;
     this.pendingReturnToLodging = false;
     this.isReturningToLodging = false;
+    this.isSpireReturnTrip = false;
     this.returnTripQueue = [];
     this.pendingTravelRegion = null;
 
     this.waveStreak = 0;
     this.chainEngage = false;
-    this.addEvent(0.5, 0.28, '💀 전멸 — 숙소로 후퇴합니다', '#ff6666', 2.5);
+    const wipeMsg = this.isInSpireRun()
+      ? '💀 야탑에서 패퇴 — 숙소로 귀환합니다'
+      : '💀 전멸 — 숙소로 후퇴합니다';
+    this.addEvent(0.5, 0.28, wipeMsg, '#ff6666', 2.5);
 
     this.finalizeLodgingArrival(false);
   }
@@ -2011,11 +2321,20 @@ export class AdventureSystem {
   private waveProcExp = 0;
 
   private onSingleEnemyKilled(slot: EncounterSlot) {
+    if (slot.defeated) return;
+    slot.defeated = true;
     const aliveAfter = this.getAliveSlots();
     if (aliveAfter.length > 0) {
       this.vfx.handoffMeleeDeadEnemy(slot.uid);
     }
     const mon = slot.def;
+    if (isRivalGhostMonsterId(mon.id)) {
+      this.killedThisWave.push(mon);
+      this.runStats.kills++;
+      this.onAudio?.({ type: 'kill', isBoss: false, isElite: true });
+      if (!this.getAliveSlots().length) this.onWaveCleared();
+      return;
+    }
     if (!mon.isBoss && !mon.isRare && !this.isBossFight && !this.isEpicFight) {
       accelerateBossPacing(this.save, this.save.currentRegion, MOB_KILL_PACE_BONUS_SEC);
     }
@@ -2036,7 +2355,7 @@ export class AdventureSystem {
       elite: this.isEliteFight && !this.isEpicFight,
       epic: this.isEpicFight,
       boss: mon.isBoss,
-    }, this.save.currentRegion) * getSoloGoldMult(this.save));
+    }, this.save.currentRegion, this.save.maxRegion) * getSoloGoldMult(this.save));
     const procExp = Math.floor(scaleKillExp(mon.exp, {
       elite: this.isEliteFight && !this.isEpicFight,
       epic: this.isEpicFight,
@@ -2061,6 +2380,10 @@ export class AdventureSystem {
 
   private onWaveCleared() {
     if (this.phase === 'loot') return;
+    if (this.isRivalDuelActive()) {
+      this.finishRivalDuelCombat(true);
+      return;
+    }
     this.vfx.retreatAllMelee();
     syncCombatHp(this.save, this.party);
     if (applyDungeonCampWaveHeal(this.save, this.party)) {
@@ -2104,7 +2427,7 @@ export class AdventureSystem {
         epic: this.isEpicFight,
         boss: mon.isBoss,
       };
-      waveGold += Math.floor(scaleKillGold(mon.gold, rewardOpts, this.save.currentRegion) * getSoloGoldMult(this.save));
+      waveGold += Math.floor(scaleKillGold(mon.gold, rewardOpts, this.save.currentRegion, this.save.maxRegion) * getSoloGoldMult(this.save));
       const exp = scaleKillExp(mon.exp, rewardOpts);
       totalExp += Math.floor(exp * getEndgameExpMult(this.save));
       for (const drop of mon.drops) {
@@ -2148,8 +2471,13 @@ export class AdventureSystem {
     }
     enforceWarehouseCap(this.save);
 
-    const accDrop = rollAccessoryDrop(this.save, this.save.currentRegion);
-    if (accDrop) lootLabels.unshift(`💍${accDrop}`);
+    const accDrop = rollAccessoryDrop(
+      this.save,
+      isInSpireRun(this.save) ? Math.max(18, this.save.currentRegion) : this.save.currentRegion,
+    );
+    if (accDrop) {
+      lootLabels.unshift(accDrop.legendary ? `✨💍${accDrop.name}` : `💍${accDrop.name}`);
+    }
 
     totalExp += this.waveProcExp;
     this.waveProcExp = 0;
@@ -2204,7 +2532,8 @@ export class AdventureSystem {
     }
 
     const bossMon = this.killedThisWave.find(m => m.isBoss);
-    if (bossMon) {
+    if (bossMon && !this.isInSpireRun()) {
+      const prevMaxRegion = this.save.maxRegion ?? 1;
       this.waveStreak = 0;
       this.chainEngage = false;
       const bonusMsg = grantBossFirstClearBonus(this.save, bossMon.regionId);
@@ -2226,16 +2555,28 @@ export class AdventureSystem {
         }
       }
       if (bossMon.regionId >= 18) {
-        this.save.maxRegion = Math.max(this.save.maxRegion ?? this.save.currentRegion, 18);
-        const firstClear = getFloorClearCount(this.save, 18) === 1
+        this.save.maxRegion = Math.max(this.save.maxRegion ?? this.save.currentRegion, bossMon.regionId);
+        const firstClear = bossMon.regionId === 18
+          && getFloorClearCount(this.save, 18) === 1
           && !this.save.floor18ClearCelebrated;
         if (firstClear) {
           this.floor18CelebrationPending = true;
           this.floor18FirstClearRun = true;
           this.chainEngage = false;
-          this.addEvent(0.5, 0.18, '🏆 18층 정복! 전설이 시작됩니다', '#ffdd88', 3);
-        } else {
+          this.addEvent(0.5, 0.18, '🏆 18층 정복! 야탑의 문이 열립니다', '#ffdd88', 3);
+        } else if (bossMon.regionId === 18) {
           this.addEvent(0.5, 0.18, '🌹 모란 보스 재격파!', '#ffaa88', 2);
+        }
+        const nextRegion = bossMon.regionId + 1;
+        if (nextRegion <= REGIONS.length) {
+          this.save.maxRegion = Math.max(this.save.maxRegion ?? 1, nextRegion);
+          const nextReg = REGIONS.find(r => r.id === nextRegion);
+          if (!this.isReturningToLodging && !this.pendingReturnToLodging && !this.save.settings.holdFloorAdvance) {
+            this.pendingTravelRegion = nextRegion;
+            this.addEvent(0.5, 0.2, `📍 ${nextReg?.name}로 이동 준비`, '#88ccff', 2);
+          } else if (!this.isReturningToLodging) {
+            this.addEvent(0.5, 0.2, `📍 ${nextReg?.name} — 층 이동 멈춤 중`, '#ffcc88', 2);
+          }
         }
       } else {
         const nextRegion = bossMon.regionId + 1;
@@ -2249,6 +2590,25 @@ export class AdventureSystem {
             this.addEvent(0.5, 0.2, `📍 ${nextReg?.name} — 층 이동 멈춤 중`, '#ffcc88', 2);
           }
         }
+      }
+      for (const msg of grantFloorMilestones(this.save, prevMaxRegion, this.save.maxRegion ?? 1)) {
+        this.addEvent(0.5, 0.22, msg, '#ffcc66', 2.5);
+      }
+    }
+
+    if (this.isInSpireRun()) {
+      const spireResult = handleSpireWaveCleared(this.save);
+      if (spireResult === 'floor_cleared') {
+        const cleared = this.save.endgame?.spireBest ?? 0;
+        const nextFloor = this.save.spireRun?.floor ?? cleared + 1;
+        const mod = getWeeklySpireModifier(this.save.spireRun?.weekId ?? '');
+        resetFloorSessionPacing(this.save, nextFloor);
+        this.currentAffix = getRegionAffix(Math.min(18, this.save.currentRegion));
+        this.addEvent(0.5, 0.2, `🗼 야탑 ${cleared}층 돌파! [${mod.name}]`, '#ffdd88', 2.6);
+        if ([25, 30, 35, 40].includes(cleared)) {
+          this.addEvent(0.5, 0.24, '💠 탑의 심핵 획득!', '#88eeff', 2.4);
+        }
+        this.addEvent(0.5, 0.26, `⬆️ ${nextFloor}층으로 — 계속 등반!`, '#aaddff', 2);
       }
     }
 
@@ -2334,6 +2694,7 @@ export class AdventureSystem {
     this.killedThisWave = [];
     this.waveProcExp = 0;
     this.isReturningToLodging = false;
+    this.isSpireReturnTrip = false;
     this.returnTripQueue = [];
     this.returnWalkSec = 0;
     this.travelFromId = 0;
@@ -2432,6 +2793,17 @@ export class AdventureSystem {
   }
 
   private completeTravel() {
+    if (this.isSpireReturnTrip) {
+      this.travelFromId = 0;
+      this.travelToId = 0;
+      this.travelDurationSec = 0;
+      this.isSpireReturnTrip = false;
+      this.addEvent(0.5, 0.32, '🏠 마을 도착', '#ccbbff', 2);
+      this.syncRuntimeToSave();
+      this.finalizeLodgingArrival(true);
+      return;
+    }
+
     const arrivedId = this.travelToId;
     if (arrivedId > 0) {
       this.save.currentRegion = arrivedId;
@@ -2502,9 +2874,11 @@ export class AdventureSystem {
     };
     const runMats = { ...runStatsSnapshot.matsGained };
     const runKills = runStatsSnapshot.kills;
-    const deepestFloor = this.save.maxRegion ?? 1;
+    const spireFloor = this.save.spireRun?.active ? (this.save.spireRun.floor ?? 0) : 0;
+    const deepestFloor = spireFloor > 0 ? spireFloor : (this.save.maxRegion ?? 1);
 
     this.isReturningToLodging = false;
+    this.isSpireReturnTrip = false;
     this.returnTripQueue = [];
     this.returnWalkSec = 0;
     this.travelFromId = 0;
@@ -2514,6 +2888,9 @@ export class AdventureSystem {
     this.backgroundScrollX = 0;
     this.save.location = 'lodging';
     this.save.inExpedition = false;
+    if (this.save.spireRun?.active) {
+      endSpireRun(this.save);
+    }
     this.save.currentRegion = 1;
     clearExpeditionRunState(this.save);
     clearExpeditionDungeonBuffs(this.save);
@@ -2564,11 +2941,15 @@ export class AdventureSystem {
 
     this.save.defeatLog = undefined;
     if (showMessage && !this.isLodgingResting) {
-      this.addEvent(0.5, 0.32, '🏠 숙소 도착 — HP 자동 회복 중', '#aaddff', 2);
+      const arriveMsg = spireFloor > 0
+        ? `🏠 마을 도착 — 야탑 ${spireFloor}층까지 등반`
+        : '🏠 숙소 도착 — HP 자동 회복 중';
+      this.addEvent(0.5, 0.32, arriveMsg, spireFloor > 0 ? '#ccbbff' : '#aaddff', 2);
     }
     saveGame(this.save);
     this.onSave?.();
     this.onUpdate?.();
+    this.onLodgingReturn?.();
   }
 
   startLodgingRest(): boolean {
@@ -2891,6 +3272,47 @@ export class AdventureSystem {
     return true;
   }
 
+  startSpireExpedition(): boolean {
+    if (this.isInExpedition() || !this.isAtLodging()) return false;
+    if (!canAccessSpire(this.save)) return false;
+    if (!canStartSpireRun(this.save).ok) return false;
+    if (!beginSpireRun(this.save)) return false;
+
+    this.pendingReturnToLodging = false;
+    this.save.defeatLog = undefined;
+    clearExpeditionHighlight(this.save);
+    this.save.location = 'dungeon';
+    this.save.inExpedition = true;
+    resetFloorSessionPacing(this.save, this.save.spireRun!.floor);
+    clearExpeditionRunState(this.save);
+    this.currentAffix = getRegionAffix(Math.min(18, this.save.currentRegion));
+    this.resetRunStats();
+    this.resetVfx();
+    this.clearEncounter();
+    this.isBossFight = false;
+    this.isEliteFight = false;
+    this.isEpicFight = false;
+    this.killedThisWave = [];
+    this.waveProcExp = 0;
+    this.pendingTravelRegion = null;
+    this.party = buildPartyCombatants(this.save);
+    syncCombatHp(this.save, this.party);
+    this.isLodgingResting = false;
+    this.setPhase('walk');
+    this.lastArrivalMessage = '';
+    this.waveStreak = 0;
+    this.chainEngage = false;
+    onExpeditionStarted(this.save);
+    void preloadSpireTowerAssets();
+    const floor = this.save.spireRun!.floor;
+    const mod = getWeeklySpireModifier(this.save.spireRun!.weekId);
+    this.addEvent(0.5, 0.3, `🗼 야탑 ${floor}층 등반 — [${mod.name}]`, '#ccbbff', 2.4);
+    this.addEvent(0.5, 0.36, '스크롤 전투 — 웨이브를 격파해 올라가세요!', '#aaddff', 2);
+    saveGame(this.save);
+    this.onSave?.();
+    return true;
+  }
+
   returnToLodging(silent = false): boolean {
     if (this.isAtLodging() || this.isReturningToLodging) return false;
     if (this.phase === 'travel') return false;
@@ -2912,6 +3334,10 @@ export class AdventureSystem {
     applyVoluntaryReturnRecovery(this.save);
     this.party = buildPartyCombatants(this.save);
 
+    if (this.isInSpireRun()) {
+      return this.beginSpireReturnToLodging(silent);
+    }
+
     const from = this.save.currentRegion;
     this.isReturningToLodging = true;
     useReturnSkip(this.save);
@@ -2930,6 +3356,29 @@ export class AdventureSystem {
     }
 
     saveGame(this.save);
+    this.onSave?.();
+    return true;
+  }
+
+  /** 야탑 — 층별 역순 이동 없이 한 번에 마을 귀환 */
+  private beginSpireReturnToLodging(silent: boolean): boolean {
+    const spireFloor = this.save.spireRun?.floor ?? 1;
+    this.isReturningToLodging = true;
+    this.isSpireReturnTrip = true;
+    this.returnTripQueue = [];
+    this.returnWalkSec = 0;
+    this.travelFromId = 0;
+    this.travelToId = 0;
+    this.travelDurationSec = Math.min(14, 4 + Math.pow(spireFloor, 0.55) * 1.15);
+    this.phaseTimer = 0;
+    this.setPhase('travel');
+
+    if (!silent) {
+      this.addEvent(0.5, 0.28, `🗼 야탑 ${spireFloor}층에서 마을로 귀환`, '#ccbbff', 2.4);
+    }
+
+    saveGame(this.save);
+    this.syncRuntimeToSave();
     this.onSave?.();
     return true;
   }

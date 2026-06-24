@@ -252,7 +252,7 @@ export function computePartyBuffers(save: GameSave) {
 }
 
 export function calcDamage(rawAtk: number, targetDef: number, pierce = false): number {
-  if (rawAtk <= 0) return 0;
+  if (!Number.isFinite(rawAtk) || rawAtk <= 0) return 0;
   const effectiveDef = pierce ? Math.floor(targetDef * 0.5) : targetDef;
   const mitigated = Math.max(0, rawAtk - effectiveDef);
   const minDmg = Math.max(1, Math.floor(rawAtk * MIN_DAMAGE_ATK_PCT));
@@ -260,7 +260,7 @@ export function calcDamage(rawAtk: number, targetDef: number, pierce = false): n
 }
 
 export function calcMagicDamage(rawAtk: number, targetMdef: number): number {
-  if (rawAtk <= 0) return 0;
+  if (!Number.isFinite(rawAtk) || rawAtk <= 0) return 0;
   const mitigated = Math.max(0, rawAtk - targetMdef);
   const minDmg = Math.max(1, Math.floor(rawAtk * MIN_DAMAGE_ATK_PCT));
   return Math.max(minDmg, mitigated);
@@ -306,7 +306,8 @@ export function getPartyDpsBreakdown(save: GameSave, targetDef?: number): PartyD
 }
 
 export function getPartyDps(save: GameSave, targetDef?: number): number {
-  return getPartyDpsBreakdown(save, targetDef).reduce((sum, e) => sum + e.dps, 0);
+  const sum = getPartyDpsBreakdown(save, targetDef).reduce((s, e) => s + e.dps, 0);
+  return Number.isFinite(sum) ? Math.max(0, sum) : 0;
 }
 
 export function getPartyTouchDamage(save: GameSave, targetDef = 0): number {

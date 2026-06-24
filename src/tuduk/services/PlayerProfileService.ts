@@ -1,11 +1,22 @@
 import type { GameSave } from '../types';
 import { getOrCreatePlayerId } from '../core/playerId';
-import { getSupabase, isSupabaseConfigured, type PlayerProfileRow } from '../core/supabaseClient';
+import { getSupabase, isSupabaseConfigured, type PartyEliteSnapshot, type PlayerProfileRow } from '../core/supabaseClient';
 import { getAdventureTeamName, getPlayerNickname } from '../data/starterSurvey';
-import { getPartyDps, getPartyDpsBreakdown } from '../systems/StatCalculator';
+import { CHAR_MAP } from '../data/characters';
+import { getPartyDpsBreakdown } from '../systems/StatCalculator';
 import { calcWeeklyScore } from '../systems/LeaderboardSystem';
 import { getSpireWeekId } from '../data/endgame/spire';
 import { LEADERBOARD_SYNC_COOLDOWN_MS } from '../data/leaderboardData';
+import {
+  findRankInList,
+  normalizeLeaderboardEntry,
+  normalizeProfilePayload,
+  rerankOverall,
+  rerankWeekly,
+} from '../data/leaderboardNormalization';
+import { findWeeklyRivals, type RivalNeighbor } from '../systems/LeaderboardCompetition';
+import { isEndgameUnlocked } from '../systems/EndgameSystem';
+import { applySeasonLeaderboardClamp } from '../systems/seasonLeaderboardClamp';
 
 export interface ProfileCheckResult {
   available: boolean;
@@ -24,8 +35,11 @@ export interface LeaderboardEntry {
   partyDps: number;
   weeklyScore: number;
   totalKills: number;
+  touchCount: number;
+  partyElites: PartyEliteSnapshot[];
   isPlayer: boolean;
   updatedAt?: string;
+  spireBest?: number;
 }
 
 export interface LeaderboardSnapshot {
@@ -34,6 +48,10 @@ export interface LeaderboardSnapshot {
   myOverallRank: number | null;
   myWeeklyRank: number | null;
   myEntry: LeaderboardEntry | null;
+  weeklyRivals: RivalNeighbor[];
+  recentTable: LeaderboardEntry[];
+  potChips: number;
+  tablePlayerCount: number;
   configured: boolean;
   error?: string;
 }
@@ -41,6 +59,109 @@ export interface LeaderboardSnapshot {
 let lastSyncAt = 0;
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingSave: GameSave | null = null;
+const PARTY_ELITE_CACHE_KEY = 'tuduk_lb_party_cache';
+
+function isOptionalColumnError(error: { code?: string; message?: string }, column: string): boolean {
+  const msg = (error.message ?? '').toLowerCase();
+  const col = column.toLowerCase();
+  return error.code === 'PGRST204'
+    || msg.includes(col)
+    || msg.includes('schema cache');
+}
+
+async function upsertProfilePayload(sb: NonNullable<ReturnType<typeof getSupabase>>, payload: ReturnType<typeof extractProfilePayload>) {
+  const optionalCols = ['party_elites', 'touch_count', 'spire_best'] as const;
+  let current: Record<string, unknown> = { ...normalizeProfilePayload(payload) };
+
+  for (let attempt = 0; attempt <= optionalCols.length; attempt++) {
+    const { error } = await sb.from('player_profiles').upsert(current, { onConflict: 'player_id' });
+    if (!error) return null;
+
+    const missing = optionalCols.find(col => isOptionalColumnError(error, col));
+    if (!missing || !(missing in current)) return error;
+    const { [missing]: _drop, ...rest } = current;
+    current = rest;
+  }
+
+  return { message: 'profile upsert failed', code: 'UPSERT_FAIL' };
+}
+
+function readPartyEliteCache(): Record<string, PartyEliteSnapshot[]> {
+  try {
+    const raw = localStorage.getItem(PARTY_ELITE_CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, PartyEliteSnapshot[]>;
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePartyEliteCache(cache: Record<string, PartyEliteSnapshot[]>): void {
+  try {
+    localStorage.setItem(PARTY_ELITE_CACHE_KEY, JSON.stringify(cache));
+  } catch { /* quota */ }
+}
+
+function mergePartyEliteCache(entries: LeaderboardEntry[]): LeaderboardEntry[] {
+  const cache = readPartyEliteCache();
+  let dirty = false;
+
+  const merged = entries.map((e) => {
+    if (e.partyElites.length) {
+      const prev = cache[e.playerId];
+      if (!prev || JSON.stringify(prev) !== JSON.stringify(e.partyElites)) {
+        cache[e.playerId] = e.partyElites;
+        dirty = true;
+      }
+      return e;
+    }
+    const cached = cache[e.playerId];
+    if (cached?.length) return { ...e, partyElites: cached };
+    return e;
+  });
+
+  if (dirty) writePartyEliteCache(cache);
+  return merged;
+}
+
+function parsePartyElites(raw: unknown): PartyEliteSnapshot[] {
+  let data: unknown = raw;
+  if (raw == null) return [];
+  if (typeof raw === 'string') {
+    try { data = JSON.parse(raw); } catch { return []; }
+  }
+  if (!Array.isArray(data)) return [];
+
+  return data
+    .map((item): PartyEliteSnapshot | null => {
+      if (!item || typeof item !== 'object') return null;
+      const row = item as Record<string, unknown>;
+      const charId = String(row.charId ?? row.char_id ?? '');
+      if (!charId || !CHAR_MAP[charId]) return null;
+      const level = Number(row.level ?? 1) || 1;
+      const name = typeof row.name === 'string' && row.name
+        ? row.name
+        : CHAR_MAP[charId]!.name;
+      return { charId, level, name };
+    })
+    .filter((e): e is PartyEliteSnapshot => e !== null)
+    .slice(0, 4);
+}
+
+export function buildPartyEliteSnapshot(save: GameSave): PartyEliteSnapshot[] {
+  const partyIds = save.party.filter(id => CHAR_MAP[id]);
+  const ownedByLevel = save.owned
+    .filter(id => CHAR_MAP[id])
+    .sort((a, b) => (save.chars[b]?.level ?? 0) - (save.chars[a]?.level ?? 0));
+  const ordered = [...partyIds, ...ownedByLevel.filter(id => !partyIds.includes(id))];
+
+  return ordered.slice(0, 4).map(id => ({
+    charId: id,
+    level: save.chars[id]?.level ?? 1,
+    name: CHAR_MAP[id]!.name,
+  }));
+}
 
 function rowToEntry(row: PlayerProfileRow, rank: number, playerId: string): LeaderboardEntry {
   return {
@@ -55,9 +176,19 @@ function rowToEntry(row: PlayerProfileRow, rank: number, playerId: string): Lead
     partyDps: row.party_dps,
     weeklyScore: row.weekly_score,
     totalKills: Number(row.total_kills),
+    touchCount: Number(row.touch_count ?? 0),
+    partyElites: parsePartyElites(row.party_elites),
     isPlayer: row.player_id === playerId,
     updatedAt: row.updated_at,
+    spireBest: row.spire_best ?? 0,
   };
+}
+
+function resolveSpireBestForProfile(save: GameSave): number {
+  if (!isEndgameUnlocked(save)) return 0;
+  const best = save.endgame?.spireBest ?? 0;
+  const runFloor = save.spireRun?.active ? (save.spireRun.floor ?? 0) : 0;
+  return Math.max(best, runFloor);
 }
 
 export function extractProfilePayload(save: GameSave) {
@@ -76,6 +207,9 @@ export function extractProfilePayload(save: GameSave) {
     weekly_score: calcWeeklyScore(save),
     week_id: getSpireWeekId(),
     total_kills: save.stats?.totalKills ?? 0,
+    touch_count: save.stats?.touchCount ?? 0,
+    party_elites: buildPartyEliteSnapshot(save),
+    spire_best: resolveSpireBestForProfile(save),
     updated_at: new Date().toISOString(),
   };
 }
@@ -122,8 +256,12 @@ export async function registerPlayerProfile(save: GameSave): Promise<{ ok: boole
   const check = await checkNicknameAvailable(nick, playerId);
   if (!check.available) return { ok: false, message: check.message };
 
+  if (applySeasonLeaderboardClamp(save)) {
+    void import('../core/SaveManager').then(({ saveGame }) => saveGame(save));
+  }
+
   const payload = extractProfilePayload(save);
-  const { error } = await sb.from('player_profiles').upsert(payload, { onConflict: 'player_id' });
+  const error = await upsertProfilePayload(sb, payload);
   if (error) {
     if (error.code === '23505') {
       return { ok: false, message: '이미 사용 중인 닉네임입니다' };
@@ -145,8 +283,12 @@ export async function syncPlayerProfile(save: GameSave, force = false): Promise<
   const sb = getSupabase();
   if (!sb) return;
 
+  if (applySeasonLeaderboardClamp(save)) {
+    void import('../core/SaveManager').then(({ saveGame }) => saveGame(save));
+  }
+
   const payload = extractProfilePayload(save);
-  const { error } = await sb.from('player_profiles').upsert(payload, { onConflict: 'player_id' });
+  const error = await upsertProfilePayload(sb, payload);
   if (error) {
     console.warn('[Leaderboard] sync failed', error);
     return;
@@ -215,37 +357,58 @@ async function fetchRankedList(
   return (data ?? []) as PlayerProfileRow[];
 }
 
-async function countBetterWeekly(weekId: string, score: number): Promise<number> {
+
+async function refetchPartyElites(entries: LeaderboardEntry[]): Promise<LeaderboardEntry[]> {
+  const missingIds = [...new Set(
+    entries.filter(e => !e.partyElites.length).map(e => e.playerId),
+  )];
+  if (!missingIds.length) return entries;
+
   const sb = getSupabase();
-  if (!sb) return 0;
-  const { count, error } = await sb
+  if (!sb) return entries;
+
+  const { data, error } = await sb
     .from('player_profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('week_id', weekId)
-    .gt('weekly_score', score);
-  if (error) return 0;
-  return count ?? 0;
+    .select('player_id, party_elites')
+    .in('player_id', missingIds);
+  if (error || !data?.length) return entries;
+
+  const eliteMap = new Map(
+    data.map(row => [row.player_id, parsePartyElites(row.party_elites)]),
+  );
+
+  return entries.map((e) => {
+    if (e.partyElites.length) return e;
+    const elites = eliteMap.get(e.playerId) ?? [];
+    return elites.length ? { ...e, partyElites: elites } : e;
+  });
 }
 
-async function countBetterOverall(maxRegion: number, partyDps: number, rosterSize: number): Promise<number> {
-  const sb = getSupabase();
-  if (!sb) return 0;
-  const { count, error } = await sb
-    .from('player_profiles')
-    .select('*', { count: 'exact', head: true })
-    .or(
-      `max_region.gt.${maxRegion},and(max_region.eq.${maxRegion},party_dps.gt.${partyDps}),`
-      + `and(max_region.eq.${maxRegion},party_dps.eq.${partyDps},roster_size.gt.${rosterSize})`,
-    );
-  if (error) {
-    const { count: c2 } = await sb
-      .from('player_profiles')
-      .select('*', { count: 'exact', head: true })
-      .gt('max_region', maxRegion);
-    return c2 ?? 0;
-  }
-  return count ?? 0;
+function hydratePartyElites(entries: LeaderboardEntry[], save: GameSave, playerId: string): LeaderboardEntry[] {
+  const localElites = buildPartyEliteSnapshot(save);
+  const patched = entries.map((e) => {
+    if (e.partyElites.length) return e;
+    if (e.playerId === playerId) return { ...e, partyElites: localElites };
+    return e;
+  });
+  return mergePartyEliteCache(patched);
 }
+
+async function fetchRecentTableActivity(playerId: string, limit = 6): Promise<PlayerProfileRow[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from('player_profiles')
+    .select('*')
+    .order('updated_at', { ascending: false })
+    .limit(limit + 2);
+  if (error) {
+    console.warn('[Leaderboard] recent table failed', error);
+    return [];
+  }
+  return ((data ?? []) as PlayerProfileRow[]).filter(r => r.player_id !== playerId).slice(0, limit);
+}
+
 
 export async function fetchLeaderboardSnapshot(save: GameSave): Promise<LeaderboardSnapshot> {
   const playerId = getOrCreatePlayerId();
@@ -258,6 +421,10 @@ export async function fetchLeaderboardSnapshot(save: GameSave): Promise<Leaderbo
       myOverallRank: null,
       myWeeklyRank: null,
       myEntry: null,
+      weeklyRivals: [],
+      recentTable: [],
+      potChips: 0,
+      tablePlayerCount: 0,
       configured: false,
       error: 'Supabase 미설정 — GitHub Secrets 또는 .env.local에 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 추가',
     };
@@ -266,18 +433,18 @@ export async function fetchLeaderboardSnapshot(save: GameSave): Promise<Leaderbo
   await syncPlayerProfile(save, true);
 
   const weekId = getSpireWeekId();
-  const [overallRows, weeklyRows] = await Promise.all([
+  const [overallRows, weeklyRows, recentRows] = await Promise.all([
     fetchRankedList('max_region', false, 'party_dps'),
     fetchRankedList('weekly_score', false, 'max_region', weekId),
+    fetchRecentTableActivity(playerId, 6),
   ]);
 
   const overall = overallRows.map((r, i) => rowToEntry(r, i + 1, playerId));
   const weekly = weeklyRows
     .filter(r => r.week_id === weekId)
-    .sort((a, b) => b.weekly_score - a.weekly_score || b.max_region - a.max_region)
     .map((r, i) => rowToEntry(r, i + 1, playerId));
 
-  const payload = extractProfilePayload(save);
+  const payload = normalizeProfilePayload(extractProfilePayload(save));
   const myEntry: LeaderboardEntry = {
     rank: 0,
     playerId,
@@ -290,27 +457,72 @@ export async function fetchLeaderboardSnapshot(save: GameSave): Promise<Leaderbo
     partyDps: payload.party_dps,
     weeklyScore: payload.weekly_score,
     totalKills: Number(payload.total_kills),
+    touchCount: Number(payload.touch_count),
+    partyElites: payload.party_elites,
     isPlayer: true,
+    spireBest: payload.spire_best,
   };
 
-  const [weeklyAhead, overallAhead] = await Promise.all([
-    countBetterWeekly(weekId, payload.weekly_score),
-    countBetterOverall(payload.max_region, payload.party_dps, payload.roster_size),
-  ]);
-
-  const myWeeklyRank = weeklyAhead + 1;
-  const myOverallRank = overallAhead + 1;
-  myEntry.rank = myOverallRank;
-
-  const inOverall = overall.find(e => e.playerId === playerId);
-  const inWeekly = weekly.find(e => e.playerId === playerId);
-
-  return {
-    overall,
-    weekly,
-    myOverallRank: inOverall?.rank ?? myOverallRank,
-    myWeeklyRank: inWeekly?.rank ?? (payload.weekly_score > 0 ? myWeeklyRank : null),
+  const allEntries = [
+    ...overall,
+    ...weekly,
+    ...recentRows.map((r, i) => rowToEntry(r, i + 1, playerId)),
     myEntry,
+  ];
+  const refetched = await refetchPartyElites(allEntries);
+  const refetchMap = new Map(refetched.map(e => [e.playerId, e.partyElites]));
+
+  const applyElites = (e: LeaderboardEntry): LeaderboardEntry => {
+    const elites = e.partyElites.length ? e.partyElites : (refetchMap.get(e.playerId) ?? []);
+    return elites.length ? { ...e, partyElites: elites } : e;
+  };
+
+  const hydratedOverall = hydratePartyElites(overall.map(applyElites), save, playerId);
+  const hydratedWeekly = hydratePartyElites(weekly.map(applyElites), save, playerId);
+  const hydratedRecent = hydratePartyElites(
+    recentRows.map((r, i) => applyElites(rowToEntry(r, i + 1, playerId))),
+    save,
+    playerId,
+  );
+  const hydratedMe = hydratePartyElites([applyElites(myEntry)], save, playerId)[0] ?? myEntry;
+
+  const withMeOverall = hydratedOverall.some(e => e.playerId === playerId)
+    ? hydratedOverall
+    : [...hydratedOverall, hydratedMe];
+  const withMeWeekly = hydratedWeekly.some(e => e.playerId === playerId)
+    ? hydratedWeekly
+    : [...hydratedWeekly, hydratedMe];
+
+  const rankedOverall = rerankOverall(withMeOverall);
+  const rankedWeekly = rerankWeekly(withMeWeekly);
+  const myOverallRank = findRankInList(rankedOverall, playerId);
+  const myWeeklyRank = findRankInList(rankedWeekly, playerId);
+  const rankedMe = rankedOverall.find(e => e.playerId === playerId) ?? normalizeLeaderboardEntry(hydratedMe);
+
+  return enrichLeaderboardSnapshot({
+    overall: rankedOverall,
+    weekly: rankedWeekly,
+    myOverallRank,
+    myWeeklyRank: payload.weekly_score > 0 ? myWeeklyRank : null,
+    myEntry: { ...rankedMe, rank: myOverallRank ?? rankedMe.rank },
+    weeklyRivals: findWeeklyRivals(rankedWeekly, playerId, myWeeklyRank),
+    recentTable: hydratedRecent.map(normalizeLeaderboardEntry),
+    potChips: rankedWeekly.reduce((sum, e) => sum + e.weeklyScore, 0),
+    tablePlayerCount: rankedWeekly.length,
     configured: true,
+  }, save);
+}
+
+/** 랭킹 렌더 전 — 초상화 로컬·캐시 보강 */
+export function enrichLeaderboardSnapshot(snap: LeaderboardSnapshot, save: GameSave): LeaderboardSnapshot {
+  const playerId = getOrCreatePlayerId();
+  return {
+    ...snap,
+    overall: hydratePartyElites(snap.overall, save, playerId),
+    weekly: hydratePartyElites(snap.weekly, save, playerId),
+    recentTable: hydratePartyElites(snap.recentTable, save, playerId),
+    myEntry: snap.myEntry
+      ? hydratePartyElites([snap.myEntry], save, playerId)[0] ?? snap.myEntry
+      : null,
   };
 }

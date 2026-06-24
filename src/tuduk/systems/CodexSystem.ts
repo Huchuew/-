@@ -26,7 +26,7 @@ export function tryClaimCodexReward(save: GameSave, regionId: number): boolean {
 
 export function checkAllCodexRewards(save: GameSave): number[] {
   const claimed: number[] = [];
-  for (let r = 1; r <= 18; r++) {
+  for (let r = 1; r <= 50; r++) {
     if (tryClaimCodexReward(save, r)) claimed.push(r);
   }
   return claimed;

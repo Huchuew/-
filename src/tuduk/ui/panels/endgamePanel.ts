@@ -1,90 +1,81 @@
 import type { GameSave } from '../../types';
 import { CHAR_MAP } from '../../data/characters';
-import { ELEMENT_ICON } from '../../data/elemental';
-import { getRiftFloor, RIFT_DAILY_KEYS, RIFT_MAX_FLOOR } from '../../data/endgame/riftFloors';
 import { RELICS } from '../../data/endgame/relics';
 import {
-  getSpireFloorDps, getSpireWeekId, getWeeklySpireModifier, SPIRE_DAILY_ATTEMPTS,
+  getSpireWeekId, getWeeklySpireModifier, SPIRE_DAILY_ATTEMPTS,
 } from '../../data/endgame/spire';
 import {
-  ensureEndgame, getEndgameLockHint, getEndgameProgressSummary, getRelicBonuses, isAscended, isEndgameUnlocked,
+  ensureEndgame, getEndgameLockHint, getEndgameProgressSummary, getEndgameTeaserLore,
+  getEndgameTeaserProgress, getRelicBonuses, isAscended, isEndgameTeaserVisible, isEndgameUnlocked,
 } from '../../systems/EndgameSystem';
-import {
-  canAttemptRift, getRiftCombatSetup, resolveRiftCombat,
-} from '../../systems/RiftSystem';
-import { canAttemptSpire, getSpireCombatSetup, resolveSpireCombat } from '../../systems/SpireSystem';
+import { isSpireTestBypass } from '../../data/endgame/spireTest';
+import { canAttemptSpire, SPIRE_ATTEMPT_CHARGE_FLOOR } from '../../systems/SpireRunSystem';
 import {
   attemptAscension, canAscend, getAscensionCostText, hasPrestigeComplete,
 } from '../../systems/AscensionSystem';
 import { getPartyDps } from '../../systems/StatCalculator';
+import { MATERIAL_LABELS } from '../../data/equipment';
 import { audio } from '../../core/AudioManager';
 import { bindTap } from '../../utils/bindTap';
-import { runRiftCombatOverlay } from '../RiftCombatOverlay';
-import { runSpireCombatOverlay } from '../SpireCombatOverlay';
 import type { PanelHost } from './PanelHost';
 
+const ACTIVE_RELICS = RELICS.filter(r => !r.id.includes('rift'));
+
 export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = ''): void {
-  if (!isEndgameUnlocked(save)) {
+  const spireTest = isSpireTestBypass();
+  const unlocked = isEndgameUnlocked(save);
+
+  if (!unlocked && !spireTest) {
+    const teaser = isEndgameTeaserVisible(save) ? getEndgameTeaserProgress(save) : null;
+    const lore = teaser ? getEndgameTeaserLore(save) : '';
+    const maxR = save.maxRegion ?? 1;
     host.panelEl.innerHTML = `${prefix}
-      <div class="panel-header"><h3>🌌 차원</h3></div>
-      <div class="endgame-locked">
-        <p class="endgame-lock-icon">🔒</p>
-        <p><strong>엔드 콘텐츠 잠김</strong></p>
-        <p class="hint">${getEndgameLockHint(save)} 후 해금</p>
-        <p class="hint">현재 · 지역 ${save.maxRegion}/18 · 18층 배지 ${save.badges.includes(18) ? '✅' : '❌'} · 최종보스 ${(save.codex.boss_final?.kills ?? 0) > 0 ? '✅' : '❌'}</p>
+      <div class="panel-header"><h3>🗼 야탑</h3></div>
+      <div class="endgame-locked endgame-teaser-panel">
+        <p class="endgame-lock-icon">${teaser ? '🌫️' : '🔒'}</p>
+        <p><strong>${teaser ? '야탑의 문 — 곧 열립니다' : '야탑 잠김'}</strong></p>
+        ${teaser
+          ? `<p class="endgame-teaser-lore">${lore}</p>
+             <div class="endgame-teaser-progress">
+               <div class="endgame-teaser-bar"><div class="endgame-teaser-fill" style="width:${teaser.progressPct}%"></div></div>
+               <p class="hint">현재 ${maxR}층 · ${getEndgameLockHint(save)}</p>
+             </div>
+             <p class="hint">18층 정복 시 무한의 탑 · 유물 · 전설 각성이 열립니다</p>`
+          : `<p class="hint">${getEndgameLockHint(save) || '15층 클리어 후 힌트가 공개됩니다'}</p>`}
       </div>`;
     return;
   }
 
   ensureEndgame(save);
   const eg = save.endgame!;
+
+  if (!unlocked && spireTest) {
+    host.endgameSub = 'spire';
+  }
+
+  const summary = getEndgameProgressSummary(save);
   const nav = host.subTabs(host.endgameSub, [
-    { id: 'rift', label: '🌌 균열' },
-    { id: 'spire', label: '🗼 탑' },
+    { id: 'spire', label: '🗼 야탑' },
     { id: 'relics', label: '💎 유물' },
     { id: 'ascend', label: '✨ 각성' },
   ]);
-  const summary = getEndgameProgressSummary(save);
-  const voidN = save.materials.void_shard ?? 0;
-  const crystalN = save.materials.rift_crystal ?? 0;
+  const essenceN = save.materials.spire_essence ?? 0;
   let body = '';
 
-  if (host.endgameSub === 'rift') {
-    const next = eg.riftCleared + 1;
-    const floor = getRiftFloor(next);
-    const dps = floor ? getPartyDps(save, Math.floor(40 + next * 8)) : 0;
-    const can = canAttemptRift(save);
-    const cleared = eg.riftCleared >= RIFT_MAX_FLOOR;
-    body = `
-      <div class="endgame-card">
-        <h4>차원 균열 · ${eg.riftCleared}/${RIFT_MAX_FLOOR}층</h4>
-        <p class="hint">일일 열쇠 ${eg.riftKeys}/${RIFT_DAILY_KEYS} · 공허 ${voidN} · 결정 ${crystalN}</p>
-        ${cleared
-          ? '<p class="endgame-done">🏆 모든 층을 정복했습니다!</p>'
-          : floor ? `
-            <p><strong>${next}층 ${floor.name}</strong> · ${floor.zone} ${ELEMENT_ICON[floor.element]}</p>
-            <p class="hint">필요 DPS ${floor.requiredDps.toLocaleString()} · 현재 ${dps.toLocaleString()}</p>
-            <p class="hint">보상 🪙${floor.gold.toLocaleString()} · 공허×${floor.voidShards}${floor.riftCrystals ? ` · 결정×${floor.riftCrystals}` : ''}</p>
-            <p class="hint">균열 진입 시 10초 미니 전투 — 투닥으로 화력 보조!</p>
-            <button class="btn-sm gold" id="rift-attempt" ${can.ok ? '' : 'disabled'}>균열 진입 (열쇠 1)</button>
-            ${!can.ok ? `<p class="hint warn">${can.reason}</p>` : ''}
-          ` : ''}
-      </div>`;
-  } else if (host.endgameSub === 'spire') {
+  if (host.endgameSub === 'spire') {
     const week = getSpireWeekId();
     const mod = getWeeklySpireModifier(week);
-    const next = eg.spireBest + 1;
-    const required = getSpireFloorDps(next, week);
-    const dps = getPartyDps(save, Math.floor(30 + next * 5));
+    const dps = getPartyDps(save, Math.floor(30 + Math.max(1, eg.spireBest) * 5));
     const can = canAttemptSpire(save);
     body = `
       <div class="endgame-card">
-        <h4>무한의 탑 · 최고 ${eg.spireBest}층</h4>
+        <h4>무한의 탑 · 야탑 · 최고 ${eg.spireBest}층</h4>
         <p class="hint">이번 주 [${mod.name}] ${mod.desc}</p>
         <p class="hint">주간 최고 ${eg.spireWeekBest}층 · 오늘 도전 ${eg.spireAttempts}/${SPIRE_DAILY_ATTEMPTS}</p>
-        <p><strong>다음 ${next}층</strong> · 필요 DPS ${required.toLocaleString()} · 현재 ${dps.toLocaleString()}</p>
-        <p class="hint">탑 진입 시 10초 등반 미니 전투 — 투닥으로 화력 보조!</p>
-        <button class="btn-sm gold" id="spire-attempt" ${can.ok ? '' : 'disabled'}>탑 진입 (도전 1)</button>
+        <p class="hint">${MATERIAL_LABELS.spire_essence} ${essenceN}개 · 25/30/35/40층 클리어 시 1개씩 · 주간 미션 전부 클리어 시 +1</p>
+        <p><strong>매 도전 1층부터</strong> · ${SPIRE_ATTEMPT_CHARGE_FLOOR}층+ 또는 기록 갱신 시 시도권 차감</p>
+        <p class="hint">현재 전투력 ${dps.toLocaleString()} · 스크롤 전투로 무한 등반</p>
+        <button class="btn-sm gold" id="spire-attempt" ${can.ok ? '' : 'disabled'}>야탑 도전 (1회)</button>
         ${!can.ok ? `<p class="hint warn">${can.reason}</p>` : ''}
       </div>`;
   } else if (host.endgameSub === 'relics') {
@@ -98,7 +89,7 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
       relicB.exp ? `EXP+${Math.round(relicB.exp * 100)}%` : '',
       relicB.gold ? `골드+${Math.round(relicB.gold * 100)}%` : '',
     ].filter(Boolean).join(' · ') || '보너스 없음';
-    const rows = RELICS.map(r => {
+    const rows = ACTIVE_RELICS.map(r => {
       const owned = eg.relics.includes(r.id);
       return `<div class="relic-row ${owned ? 'owned' : 'locked'}">
         <span>${owned ? '💎' : '🔒'}</span>
@@ -106,7 +97,8 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
       </div>`;
     }).join('');
     body = `
-      <p class="hint">유물 ${eg.relics.length}/${RELICS.length} · 합산: ${bonusLine}</p>
+      <p class="hint">유물 ${eg.relics.length}/${ACTIVE_RELICS.length} · 합산: ${bonusLine}</p>
+      <p class="hint">야탑·도감·각성 마일스톤으로 획득 · 전설 장신구는 던전 극희귀 드랍</p>
       <div class="relic-list">${rows}</div>`;
   } else {
     if (!save.owned.includes(host.ascendCharId)) {
@@ -127,7 +119,7 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
       <div class="endgame-card">
         <h4>${def.name} 전설 각성</h4>
         <p class="hint">${getAscensionCostText()}</p>
-        <p class="hint">Lv.${st?.level ?? 0} · 전직 ${hasPrestigeComplete(st!, charId) ? '✅' : '❌'} · 균열 ${eg.riftCleared}층</p>
+        <p class="hint">Lv.${st?.level ?? 0} · 4차전직 ${hasPrestigeComplete(st!, charId) ? '✅' : '❌'} · 야탑 ${eg.spireBest}층 · 심핵 ${essenceN}개</p>
         ${ascended
           ? '<p class="endgame-done">✨ 각성 완료 — 전 스탯 +28%</p>'
           : `<button class="btn-sm gold" id="ascend-btn" ${can.ok ? '' : 'disabled'}>전설 각성</button>
@@ -137,7 +129,7 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
 
   host.panelEl.innerHTML = `${prefix}
     <div class="panel-header">
-      <h3>🌌 차원</h3>
+      <h3>🗼 야탑</h3>
       <span class="badge">${summary}</span>
     </div>
     ${nav}${body}`;
@@ -145,45 +137,33 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
 }
 
 function bindEndgameActions(host: PanelHost): void {
-  bindTap(host.panelEl.querySelector('#rift-attempt'), () => {
-    const save = host.getSave();
-    const setup = getRiftCombatSetup(save);
-    if (!setup) {
-      audio.playFail();
-      host.showToast('균열에 진입할 수 없습니다', false);
-      return;
-    }
-    void runRiftCombatOverlay(setup, (result) => {
-      const res = resolveRiftCombat(save, result.damageDealt, result.tapCount);
-      if (!res.ok) { audio.playFail(); host.showToast(res.message, false); return; }
-      if (res.win) { audio.playUpgrade(); host.showToast(res.message); }
-      else { audio.playFail(); host.showToast(res.message, false); }
-      host.onRefresh();
-      host.render();
-    });
-  });
   bindTap(host.panelEl.querySelector('#spire-attempt'), () => {
     const save = host.getSave();
-    const setup = getSpireCombatSetup(save);
-    if (!setup) {
+    const check = canAttemptSpire(save);
+    if (!check.ok) {
       audio.playFail();
-      host.showToast('탑에 진입할 수 없습니다', false);
+      host.showToast(check.reason ?? '야탑에 진입할 수 없습니다', false);
       return;
     }
-    void runSpireCombatOverlay(setup, (result) => {
-      const res = resolveSpireCombat(save, result.damageDealt, result.tapCount);
-      if (!res.ok) { audio.playFail(); host.showToast(res.message, false); return; }
-      if (res.win) { audio.playUpgrade(); host.showToast(res.message); }
-      else { audio.playFail(); host.showToast(res.message, false); }
-      host.onRefresh();
-      host.render();
-    });
+    if (host.getAdv().startSpireExpedition()) {
+      audio.playUpgrade();
+      host.enterDungeonRun();
+    } else {
+      audio.playFail();
+      host.showToast('야탑 시작 실패', false);
+    }
   });
   bindTap(host.panelEl.querySelector('#ascend-btn'), () => {
     const save = host.getSave();
-    const res = attemptAscension(save, host.ascendCharId);
-    if (res.ok) { audio.playUpgrade(); host.showToast(res.message); }
-    else { audio.playFail(); host.showToast(res.message, false); }
+    const charId = host.ascendCharId;
+    const res = attemptAscension(save, charId);
+    if (res.ok) {
+      audio.playAscension(charId);
+      host.showToast(res.message);
+    } else {
+      audio.playFail();
+      host.showToast(res.message, false);
+    }
     host.onRefresh();
     host.render();
   });

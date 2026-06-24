@@ -2,7 +2,8 @@ import type { GameSave } from '../types';
 import { getWarehouseUpgradeCost } from './tycoonConfig';
 
 export type CampBuildingId =
-  | 'mine' | 'rare_mine' | 'lab' | 'herb' | 'smelter' | 'clinic'
+  | 'lumber_mill' | 'mine' | 'rare_mine' | 'lab' | 'herb' | 'smelter' | 'clinic'
+  | 'spirit_loom' | 'legend_forge' | 'void_cauldron'
   | 'inn' | 'kitchen' | 'warehouse' | 'guild'
   | 'training' | 'armory' | 'library' | 'shrine' | 'watchtower' | 'workshop' | 'spring';
 export type CampBuildingKind = 'production' | 'buff' | 'dungeon';
@@ -21,13 +22,21 @@ export interface CampBuildingDef {
   costMult: number;
   /** 던전 원정 보너스 — 캠프 「던전」 탭 */
   dungeonBonus?: boolean;
-  produce?: 'iron_ore' | 'potion' | 'healing_herb' | 'magic_dust' | 'rare_ore';
+  produce?: 'wood_chip' | 'iron_ore' | 'potion' | 'healing_herb' | 'magic_dust' | 'rare_ore'
+    | 'spirit_thread' | 'legend_scale' | 'void_shard';
   produceAmount?: number;
   /** 생산 1회당 소모 재료 */
   consume?: Record<string, number>;
 }
 
 export const CAMP_BUILDINGS: CampBuildingDef[] = [
+  {
+    id: 'lumber_mill', name: '목제소', icon: '🪵', kind: 'production',
+    desc: '목재 자동 가공 — 연구실·용광로 재료 (채광장보다 빠르게 해금)',
+    unlockRegion: 2, baseIntervalMs: 5 * 60_000, minIntervalMs: 40_000,
+    maxLevel: 12, baseCost: 1400, costMult: 2.65,
+    produce: 'wood_chip', produceAmount: 8,
+  },
   {
     id: 'mine', name: '채광장', icon: '⛏️', kind: 'production',
     desc: '철광석 + 희귀 광석 자동 채굴 — Lv↑일수록 희귀 광석 비율↑',
@@ -65,6 +74,30 @@ export const CAMP_BUILDINGS: CampBuildingDef[] = [
     maxLevel: 12, baseCost: 11500, costMult: 3.1,
     produce: 'magic_dust', produceAmount: 7,
     consume: { iron_ore: 4, wood_chip: 2 },
+  },
+  {
+    id: 'spirit_loom', name: '성역 방직소', icon: '🧵', kind: 'production',
+    desc: '희귀 광석·슬라임 젤리로 정령 실 방직 — 고급 성장·장비 재료',
+    unlockRegion: 12, baseIntervalMs: 114 * 60_000, minIntervalMs: 33 * 60_000,
+    maxLevel: 10, baseCost: 16_500, costMult: 3.15,
+    produce: 'spirit_thread', produceAmount: 2,
+    consume: { rare_ore: 3, slime_gel: 2 },
+  },
+  {
+    id: 'legend_forge', name: '전설 비늘 정제소', icon: '🐉', kind: 'production',
+    desc: '희귀 광석·마력 가루를 녹여 전설 비늘 정제 — 느리지만 확실한 파밍',
+    unlockRegion: 14, baseIntervalMs: 126 * 60_000, minIntervalMs: 36 * 60_000,
+    maxLevel: 10, baseCost: 22_000, costMult: 3.2,
+    produce: 'legend_scale', produceAmount: 1,
+    consume: { rare_ore: 6, magic_dust: 4 },
+  },
+  {
+    id: 'void_cauldron', name: '공허 가마솥', icon: '🌑', kind: 'production',
+    desc: '전설 비늘·약초로 공허 파편 추출 — 야탑·각성 재료',
+    unlockRegion: 16, baseIntervalMs: 150 * 60_000, minIntervalMs: 45 * 60_000,
+    maxLevel: 8, baseCost: 38_500, costMult: 3.25,
+    produce: 'void_shard', produceAmount: 1,
+    consume: { legend_scale: 1, healing_herb: 3 },
   },
   {
     id: 'clinic', name: '류아의 치료술', icon: '💗', kind: 'buff',
@@ -147,6 +180,7 @@ export function getBuildingLevel(save: GameSave, id: CampBuildingId): number {
   const camp = save.camp;
   if (!camp) return 0;
   switch (id) {
+    case 'lumber_mill': return camp.lumber_millLevel ?? 0;
     case 'mine': return camp.mineLevel ?? 0;
     case 'rare_mine': return camp.rare_mineLevel ?? 0;
     case 'lab': return camp.labLevel ?? 0;
@@ -164,6 +198,9 @@ export function getBuildingLevel(save: GameSave, id: CampBuildingId): number {
     case 'watchtower': return camp.watchtowerLevel ?? 0;
     case 'workshop': return camp.workshopLevel ?? 0;
     case 'spring': return camp.springLevel ?? 0;
+    case 'spirit_loom': return camp.spirit_loomLevel ?? 0;
+    case 'legend_forge': return camp.legend_forgeLevel ?? 0;
+    case 'void_cauldron': return camp.void_cauldronLevel ?? 0;
   }
 }
 
@@ -185,11 +222,15 @@ export function getBuildingIntervalMs(def: CampBuildingDef, level: number): numb
 export function getBuildingOutputAmount(def: CampBuildingDef, level: number): number {
   if (level <= 0) return 0;
   const base = def.produceAmount ?? 1;
+  if (def.id === 'lumber_mill') return base + Math.floor(level / 2);
   if (def.id === 'herb') return base + Math.floor(level / 4);
   if (def.id === 'smelter') return base + Math.floor(level / 3);
   if (def.id === 'mine') return base + Math.floor(level / 2);
   if (def.id === 'rare_mine') return base + Math.floor(level / 3);
   if (def.id === 'lab') return base + Math.floor(level / 4);
+  if (def.id === 'spirit_loom') return base + Math.floor(level / 4);
+  if (def.id === 'legend_forge') return base + Math.floor(level / 5);
+  if (def.id === 'void_cauldron') return base + Math.floor(level / 6);
   return base;
 }
 

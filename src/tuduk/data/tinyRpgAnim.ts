@@ -506,11 +506,35 @@ export interface BattleLayout {
   dashMaxDist: number;
 }
 
+/** 결투장 PvP — 캐릭터 겹침 완화용 스프라이트 축소 */
+export const RIVAL_DUEL_SPRITE_SCALE = 0.78;
+
+export function scaleBattleSpriteSize(
+  size: { w: number; h: number },
+  mult: number,
+): { w: number; h: number } {
+  return { w: Math.max(24, Math.round(size.w * mult)), h: Math.max(32, Math.round(size.h * mult)) };
+}
+
 /** 다중 몬스터 X 좌표 (오른쪽부터 펼침) */
 export function getEnemySlotXs(baseX: number, spriteW: number, count: number): number[] {
   if (count <= 1) return [baseX];
   const gap = Math.round(spriteW * 0.48);
   return Array.from({ length: count }, (_, i) => baseX - i * gap);
+}
+
+/** 결투장 — 적 고스트 캐릭터 가로 간격 (캐릭터 스프라이트용) */
+export function getRivalDuelEnemySlotXs(baseX: number, spriteW: number, count: number): number[] {
+  if (count <= 1) return [baseX];
+  const gap = Math.round(spriteW * 0.96);
+  return Array.from({ length: count }, (_, i) => baseX - i * gap);
+}
+
+/** 결투장 — 슬롯별 깊이(발 Y) 오프셋으로 겹침 완화 */
+export function getRivalSlotDepthOffset(slot: number, count: number, step = 7): number {
+  if (count <= 1) return 0;
+  const mid = (count - 1) / 2;
+  return Math.round((slot - mid) * step);
 }
 
 export function getBattleLayout(
@@ -534,6 +558,30 @@ export function getBattleLayout(
   const dashMaxDist = Math.max(
     playerSize.w * 0.5,
     enemyX - partyBaseX - Math.round(playerSize.w * 0.22),
+  );
+  return { enemyX, partyBaseX, partyGap, dashMaxDist };
+}
+
+/** 결투장 PvP — 양측 캐릭터 대열 간격·중앙 여백 확대 */
+export function getRivalDuelBattleLayout(
+  canvasW: number,
+  canvasH: number,
+  hudH: number,
+  groundY: number,
+  partyCount: number,
+): BattleLayout {
+  const playerSize = getBattleSpriteSize(canvasW, canvasH, hudH, groundY, 'player');
+  const scaledW = Math.round(playerSize.w * RIVAL_DUEL_SPRITE_SCALE);
+  const sidePad = Math.max(10, Math.round(canvasW * 0.05));
+  const partyGap = Math.round(scaledW * 0.52);
+  const partyBaseX = Math.max(Math.round(scaledW * 0.48), sidePad);
+  const enemyMargin = Math.max(sidePad, Math.round(scaledW * 0.48));
+  const enemyX = canvasW - enemyMargin;
+  const partySpread = partyCount > 1 ? (partyCount - 1) * partyGap : 0;
+  const centerGap = Math.round(canvasW * 0.30);
+  const dashMaxDist = Math.max(
+    Math.round(scaledW * 0.18),
+    enemyX - partyBaseX - partySpread - centerGap,
   );
   return { enemyX, partyBaseX, partyGap, dashMaxDist };
 }

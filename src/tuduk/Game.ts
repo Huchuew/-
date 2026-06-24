@@ -1,4 +1,4 @@
-import { loadSave, reconcileSave, saveGame, setSaveErrorHandler, isResetToStarterPending } from './core/SaveManager';
+import { loadSave, reconcileSave, refreshLastOnlineFromStorage, saveGame, setSaveErrorHandler, isResetToStarterPending } from './core/SaveManager';
 import { CHAR_MAP } from './data/characters';
 import { AdventureSystem } from './systems/AdventureSystem';
 import { AdventureRenderer } from './render/AdventureRenderer';
@@ -12,6 +12,7 @@ import { getPrestigeJobProfile } from './data/prestigeAudio';
 import { refreshBgm, setBgmContextProvider } from './core/bgmContext';
 import { preloadGameAssets } from './assets/preloadAssets';
 import { showExpeditionSettlementModal } from './ui/expeditionSettlement';
+import { showRivalDuelResultModal } from './ui/rivalDuelResultModal';
 import { showFloor18ClearModal } from './ui/floor18ClearModal';
 import { showAugmentPickModal } from './ui/augmentModal';
 import {
@@ -27,16 +28,33 @@ import { CombatSkillBar } from './ui/CombatSkillBar';
 import { combatSkillBarHeightPx } from './data/combatUiLayout';
 import { isStandalonePwa } from './utils/viewportInsets';
 import { EXPEDITION_POTION_CARRY, MAX_POTION_STOCK, type GameSave } from './types';
+import { showConfirmModal } from './ui/confirmModal';
 import { getExpeditionPotions, getPotionStock } from './systems/PotionInventory';
 import { getHomeStationLabel, getPlayerNickname, getAdventureTeamName } from './data/starterSurvey';
 import { GEM_COST, tryGemAugmentRerollAll } from './systems/GemShop';
 import { bindTap } from './utils/bindTap';
 import { hapticLight, setVibrationEnabled } from './core/Haptics';
+import { getSpireWeekId } from './data/endgame/spire';
+import { calcWeeklyScore } from './systems/LeaderboardSystem';
+import { tryLodgingPubRankToast } from './systems/PubRankToast';
+import type { LeaderboardEntry } from './services/PlayerProfileService';
+import { processPlayerMailOnLodging } from './systems/PlayerMessageSystem';
 
 let activeGame: TudakGame | null = null;
 
 export function getActiveGame(): TudakGame | null {
   return activeGame;
+}
+
+export function beginRivalDuelFromLeaderboard(rival: LeaderboardEntry): { ok: boolean; message: string } {
+  const game = getActiveGame();
+  if (!game) return { ok: false, message: '게임이 실행 중이지 않아요' };
+  return game.beginRivalDuel(rival);
+}
+
+export function isGameInExpedition(): boolean {
+  const game = getActiveGame();
+  return game ? game.isInExpedition() : false;
 }
 
 export class TudakGame {
@@ -67,10 +85,12 @@ export class TudakGame {
   constructor(private root: HTMLElement, initialSave?: GameSave) {
     this.save = reconcileSave(initialSave ?? loadSave()!);
     setVibrationEnabled(this.save.settings.vibration !== false);
+    refreshLastOnlineFromStorage(this.save);
     const offlinePreview = calcOfflineReward(this.save);
     applyOfflineReward(this.save);
     tickCampProduction(this.save);
     saveGame(this.save);
+    void processPlayerMailOnLodging(this.save, () => {});
 
     this.canvas = root.querySelector('#adventure-canvas') as HTMLCanvasElement;
     this.adventureStage = root.querySelector('.adventure-stage') as HTMLElement;
@@ -118,6 +138,16 @@ export class TudakGame {
       audio.playRest();
       this.updateLodgingUi();
     };
+    this.adv.onLodgingReturn = () => {
+      const weekId = getSpireWeekId();
+      const weeklyScore = calcWeeklyScore(this.save);
+      void processPlayerMailOnLodging(this.save, msg => this.panels.showToast(msg, true));
+      window.setTimeout(() => {
+        void tryLodgingPubRankToast(this.save, weekId, weeklyScore, msg => {
+          this.panels.showToast(msg, true);
+        });
+      }, 2800);
+    };
     this.adv.onUpdate = () => {
       if (this.adv.isAtLodging() && this.adv.isLodgingResting) {
         if (!this.panels.refreshLiveWidgets()) this.panels.render();
@@ -132,6 +162,20 @@ export class TudakGame {
         if (def) this.panels.showToast(`✨ 증강: ${def.icon} ${def.name}`);
         this.syncParty();
         this.adv.resumeAfterAugmentPick();
+      });
+    };
+    this.adv.onRivalDuelComplete = (result) => {
+      if (result.won) audio.playGold();
+      else audio.playFail();
+      showRivalDuelResultModal(this.root, result, () => {
+        this.adv.resumeAfterRivalDuelResult();
+        this.panels.showToast(result.message, result.won);
+        saveGame(this.save);
+        this.syncParty();
+        this.updateHud();
+        this.panels.goToLodgingPanel('hub');
+        this.panels.render();
+        refreshBgm();
       });
     };
     this.adv.onFloor18Celebration = (firstClear) => {
@@ -331,11 +375,15 @@ export class TudakGame {
       this.panels.showToast(`💎 잼이 부족합니다 (필요: ${GEM_COST.augmentRerollAll})`, false);
       return;
     }
-    const ok = window.confirm(
-      `보유 증강 ${count}개를 초기화하고 층별로 다시 선택합니다.\n💎 잼 ${GEM_COST.augmentRerollAll}개를 사용할까요?`,
-    );
-    if (!ok) return;
+    showConfirmModal(document.getElementById('game-root') ?? document.body, {
+      title: '증강 리롤',
+      message: `보유 증강 ${count}개를 초기화하고 층별로 다시 선택합니다.<br/>💎 잼 ${GEM_COST.augmentRerollAll}개를 사용할까요?`,
+      confirmLabel: '리롤',
+      onConfirm: () => this.doAugmentRerollAll(count),
+    });
+  }
 
+  private doAugmentRerollAll(count: number): void {
     const floors = tryGemAugmentRerollAll(this.save);
     if (!floors?.length) {
       this.panels.showToast('증강 리롤에 실패했습니다', false);
@@ -359,7 +407,7 @@ export class TudakGame {
     window.setTimeout(() => {
       this.retroAugmentScheduled = false;
       if (!this.adv.isAtLodging() || this.adv.isInExpedition()) return;
-      if (document.querySelector('.offline-popup, #expedition-settlement-modal, #augment-pick-modal')) return;
+      if (document.querySelector('.offline-popup, #expedition-settlement-modal, #augment-pick-modal, #rival-duel-result-modal')) return;
       this.startRetroactiveAugmentPicks();
     }, 600);
   }
@@ -482,11 +530,11 @@ export class TudakGame {
     const nick = getPlayerNickname(this.save);
     if (homeEl) {
       const team = getAdventureTeamName(this.save);
-      const homeLine = home
-        ? (nick ? `${home} · ${nick}` : home)
-        : '';
-      homeEl.textContent = homeLine ? `📌 ${homeLine}` : (team ? `📌 ${team}` : '');
-      homeEl.classList.toggle('hidden', !homeLine && !team);
+      const identity = home
+        ? (nick ? `${team} · ${nick}` : team)
+        : team;
+      homeEl.textContent = identity || '';
+      homeEl.classList.toggle('hidden', !identity);
     }
     if (locEl) locEl.textContent = this.adv.getCurrentLocationLabel();
     if (goldEl) goldEl.textContent = `🪙 ${this.save.gold.toLocaleString()}`;
@@ -633,6 +681,24 @@ export class TudakGame {
     }
   }
 
+  isInExpedition(): boolean {
+    return this.adv.isInExpedition();
+  }
+
+  beginRivalDuel(rival: LeaderboardEntry): { ok: boolean; message: string } {
+    const res = this.adv.startRivalDuel(rival);
+    if (res.ok) {
+      saveGame(this.save);
+      this.panels.enterDungeonRun();
+      this.syncParty();
+      this.updateHud();
+      refreshBgm();
+      audio.playUpgrade();
+      return { ok: true, message: `⚔️ ${rival.nickname} 모험단과 조우!` };
+    }
+    return { ok: false, message: res.reason ?? '라이벌 격파 시작 실패' };
+  }
+
   private bindPotion() {
     bindTap(this.root.querySelector('#potion-btn'), () => {
       this.unlockAudio();
@@ -727,6 +793,7 @@ export class TudakGame {
     if (!this.loopActive) return;
     const dt = Math.min(0.05, (now - this.lastTime) / 1000);
     this.lastTime = now;
+    if (!this.loopActive) return;
     this.save.stats.playTime += dt;
     this.adv.update(dt);
     this.updateLodgingUi();
@@ -760,7 +827,9 @@ export class TudakGame {
       this.updatePotionBtn();
       this.panels.updateGoldDisplay(this.save.gold);
     }
-    this.raf = requestAnimationFrame(t => this.loop(t));
+    if (this.loopActive) {
+      this.raf = requestAnimationFrame(t => this.loop(t));
+    }
   }
 
   private showOfflinePreview(offline: OfflineResult) {

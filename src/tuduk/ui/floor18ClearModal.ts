@@ -39,7 +39,7 @@ export function showFloor18ClearModal(
           당신은 이 던전을 끝까지 돌파한 <b>최초의 1등</b> 모험단입니다.
         </p>
         <p class="hint floor18-clear-hint">
-          🏅 붉은꽃의 배지 · 18층 올클리어 · 엔드게임 해금
+          🏅 붉은꽃의 배지 · 18층 올클리어 · 야탑 해금
         </p>
         <p class="hint floor18-endgame-hint">${getEndgameUnlockHint(save)}</p>
       </div>

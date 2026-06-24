@@ -34,6 +34,19 @@ export function formatPityBonus(failCount: number): string {
   return `+${Math.round(failCount * PITY_STEP * 100)}%`;
 }
 
+/** pity UI — 몇 번 더 실패하면 최대 확률인지 */
+export function getPityHint(st: CharState, node: GrowthNode): string {
+  const fails = getGrowthFails(st, node.id);
+  const rate = getLearnRate(node, fails);
+  if (rate >= MAX_LEARN_RATE - 0.001) return '다음 시도 최대 확률';
+  const early = nodeTier(node) <= 1 ? EARLY_TIER_BONUS : 0;
+  const base = node.successRate + early;
+  const needFails = Math.ceil((MAX_LEARN_RATE - base) / PITY_STEP);
+  const left = Math.max(0, needFails - fails);
+  if (left <= 0) return `현재 ${Math.round(rate * 100)}% (최대)`;
+  return `${left}회 더 실패 시 ${Math.round(MAX_LEARN_RATE * 100)}%`;
+}
+
 export function isNodeOwned(st: CharState, nodeId: string): boolean {
   return st.unlockedNodes.includes(nodeId);
 }

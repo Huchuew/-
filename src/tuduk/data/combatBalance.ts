@@ -1,5 +1,6 @@
 import type { GameSave } from '../types';
 import { getMinLevelForFloor, getMinPrestigeForFloor } from './floorProgression';
+import { earlyProgressGoldMult } from './economyBalance';
 
 /** 전투 HP 배율 — 캐릭터·몬스터 공통 */
 export const COMBAT_HP_SCALE = 10;
@@ -62,18 +63,31 @@ export interface KillRewardOpts {
 /** 층별 처치 골드 — 저층 파밍 효율 완화, 고층 보상 가속 */
 export function regionKillGoldScale(regionId: number): number {
   const r = Math.max(1, Math.min(MAX_FLOOR, regionId));
-  if (r <= 6) return 0.68 + (r - 1) * 0.04;
-  if (r <= 10) return 0.88 + (r - 6) * 0.03;
-  if (r <= 12) return 1.0 + (r - 10) * 0.08;
-  const t = (r - 12) / (MAX_FLOOR - 12);
-  return 1.16 * Math.pow(3.2, t);
+  let scale: number;
+  if (r <= 6) scale = 0.68 + (r - 1) * 0.04;
+  else if (r <= 10) scale = 0.88 + (r - 6) * 0.03;
+  else if (r <= 12) scale = 1.0 + (r - 10) * 0.08;
+  else {
+    const t = (r - 12) / (MAX_FLOOR - 12);
+    scale = 1.16 * Math.pow(3.2, t);
+  }
+  if (r >= 11 && r <= 20) scale *= 1.1;
+  return scale;
 }
 
-export function scaleKillGold(base: number, opts: KillRewardOpts = {}, regionId = 1): number {
+export function scaleKillGold(
+  base: number,
+  opts: KillRewardOpts = {},
+  regionId = 1,
+  maxRegion?: number,
+): number {
   let g = base * REWARD_SCALE * regionKillGoldScale(regionId);
   if (opts.epic) g *= 2.75;
   else if (opts.elite) g *= 2.15;
   if (opts.boss) g *= 1.22;
+  if (maxRegion != null && maxRegion <= 10) {
+    g *= earlyProgressGoldMult(maxRegion);
+  }
   return Math.floor(g * 1.14);
 }
 
@@ -89,7 +103,7 @@ export function scaleKillExp(base: number, opts: KillRewardOpts = {}): number {
  * 1~18층 점진적 난이도 — 초반·중반 체감 대폭 상향 (1~10층 별도 가산)
  */
 export const LATE_GAME_FLOOR = 10;
-const MAX_FLOOR = 18;
+const MAX_FLOOR = 50;
 
 function floorT(regionId: number): number {
   const r = Math.max(1, Math.min(MAX_FLOOR, regionId));
@@ -131,6 +145,8 @@ export function regionMonsterHpScale(regionId: number): number {
   if (regionId >= 5 && regionId <= 16) scale *= 1.05 + (regionId - 5) * 0.010;
   if (regionId >= 12) scale *= 1 + (regionId - 11) * 0.028;
   if (regionId >= 16) scale *= 1.08;
+  if (regionId >= 19) scale *= 1 + (regionId - 18) * 0.022;
+  if (regionId >= 35) scale *= 1.12;
   return scale * GLOBAL_FLOOR_MONSTER_MULT;
 }
 
@@ -142,6 +158,8 @@ export function regionMonsterAtkScale(regionId: number): number {
   if (regionId === 11) scale *= 0.96;
   if (regionId >= 12) scale *= 1 + (regionId - 11) * 0.024;
   if (regionId >= 16) scale *= 1.06;
+  if (regionId >= 19) scale *= 1 + (regionId - 18) * 0.018;
+  if (regionId >= 35) scale *= 1.1;
   return scale * GLOBAL_FLOOR_MONSTER_MULT;
 }
 
@@ -162,7 +180,7 @@ export const PLAYER_ATK_SPD_GLOBAL_MULT = 0.62;
 /** 플레이어 공격속도 — 4층+ 10층 체감(0.72)으로 통일 (모션 일관성) */
 export function regionPlayerAtkSpdMult(regionId: number): number {
   const r = Math.max(1, Math.min(MAX_FLOOR, regionId));
-  if (r <= 3) return 0.52 + (r - 1) * 0.038;
+  if (r <= 3) return 0.60 + (r - 1) * 0.04;
   return 0.72;
 }
 
@@ -319,6 +337,6 @@ export function regionGrowthPressureMult(save: GameSave, regionId: number): numb
     mult *= 1 + (needPrestige - avgPrestige) * presRate * floorEase;
   }
 
-  const maxMult = regionId <= 10 ? 1.72 : regionId <= 12 ? 1.88 : regionId <= 14 ? 2.05 : 2.28;
+  const maxMult = regionId <= 6 ? 1.55 : regionId <= 10 ? 1.72 : regionId <= 12 ? 1.88 : regionId <= 14 ? 2.05 : 2.28;
   return Math.min(maxMult, mult);
 }

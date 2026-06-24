@@ -15,7 +15,6 @@ type NodeIn = {
 
 function treeMaterialMult(prefix: string): number {
   if (prefix.endsWith('_pr')) return 12;
-  if (prefix.endsWith('_sw') || prefix.endsWith('_df')) return 6;
   return 1;
 }
 
@@ -38,16 +37,6 @@ function defaultGrowthMaterials(tier: number, isPrestige: boolean, prefix: strin
       : tier === 1
         ? { rare_ore: 14, magic_dust: 22, spirit_thread: 12, beast_fang: 10, legend_scale: 2 }
         : { rare_ore: 22, legend_scale: 4, magic_dust: 35, spirit_thread: 18, void_shard: 3 };
-  } else if (prefix.endsWith('_sw') || prefix.endsWith('_df')) {
-    base = {
-      iron_ore: 8 + step * 8,
-      wood_chip: 6 + step * 5,
-      beast_fang: 2 + step * 2,
-      magic_dust: 3 + step * 3,
-      rare_ore: step >= 3 ? 2 + step : 1,
-      spirit_thread: step >= 4 ? 1 + Math.floor(step / 2) : 0,
-      legend_scale: step >= 5 ? 1 + Math.floor(step / 3) : 0,
-    };
   } else {
     base = {
       iron_ore: 3 + step * 3,

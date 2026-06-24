@@ -16,7 +16,7 @@ function bossCodexThreshold(regionId: number): number {
 
 /** 미클리어 층 — 보스 전 잡몹 사냥 시간 (레거시 상수) */
 
-export const BOSS_PACE_UNDER_10_SEC = 15 * 60;
+export const BOSS_PACE_UNDER_10_SEC = 10 * 60;
 
 
 

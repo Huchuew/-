@@ -69,16 +69,16 @@ export function renderTownHub(save: GameSave, adv: AdventureSystem): string {
   const lbBadge = leaderboardHubBadge(save);
 
   const lodgingCards: (HubCard | 'records-row')[] = [
-    { sub: 'leaderboard', icon: '🏆', title: '모험단 랭킹', desc: '실시간 유저 순위 · 주간 SP 대결', tone: 'leaderboard', badge: lbBadge },
+    { sub: 'leaderboard', icon: '🏆', title: '잭펍 랭킹', desc: '주간 랭킹 · 라이브 성장 소식', tone: 'leaderboard', badge: lbBadge },
     { sub: 'trade', icon: '💰', title: '거래', desc: '재료 판매(주수입) · 포션·영약 구매', tone: 'trade' },
-    { sub: 'news', icon: '📋', title: '소식', desc: '영입 · 일일 보상', tone: 'news', badge: newsBadge },
+    { sub: 'news', icon: '📋', title: '소식', desc: '영입 · 일일·주간 보상', tone: 'news', badge: newsBadge },
     { sub: 'camp', icon: '🏕️', title: '캠프', desc: '자동 생산 · 재료 가공', tone: 'camp' },
     'records-row',
     { sub: 'dungeon', icon: '🗺️', title: '던전 출발', desc: '층 선택 후 원정 시작', tone: 'dungeon', wide: true },
   ];
 
   const expeditionCards: (HubCard | 'records-row')[] = [
-    { sub: 'leaderboard', icon: '🏆', title: '모험단 랭킹', desc: '최고 층 · DPS · 주간 SP', tone: 'leaderboard', badge: lbBadge },
+    { sub: 'leaderboard', icon: '🏆', title: '잭펍 랭킹', desc: '주간 라이벌 · 성장 소식', tone: 'leaderboard', badge: lbBadge },
     { sub: 'dungeon', icon: '⚔️', title: '원정 현황', desc: '층 정보 · 보스 게이트', tone: 'dungeon', wide: true },
     { sub: 'camp', icon: '🏕️', title: '캠프', desc: '원정 준비 버프 확인', tone: 'camp' },
     'records-row',
