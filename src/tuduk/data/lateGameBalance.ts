@@ -2,6 +2,8 @@ import type { GameSave } from '../types';
 import { CHAR_MAP, isHealerChar, isTankChar } from './characters';
 import { getActivePartyMembers } from '../systems/CharacterStatusSystem';
 import { getStarterProfile } from './starterBalance';
+import { gradeIndex, GRADE_LABEL, GRADE_ORDER, normalizeGrade } from './equipGrades';
+import type { EquipSlot } from '../types';
 
 import { getMinLevelForFloor, getMinPrestigeForFloor } from '../data/floorProgression';
 
@@ -15,6 +17,8 @@ export const FULL_PARTY_FLOOR = 12;
 export const MIN_GROWTH_NODES_LATE = 5;
 /** 10층+ 권장 장비 슬롯 */
 export const MIN_EQUIP_SLOTS_LATE = 3;
+/** 18층 클리어 권장 — 15세대 장비 (u5 PH · 범귀, 0-based tier 14) */
+export const FLOOR_18_MIN_EQUIP_TIER = 14;
 
 export interface PartyReadiness {
   score: number;
@@ -38,6 +42,27 @@ export function isLateGameFloor(regionId: number): boolean {
 
 function countEquippedSlots(st: { equipped?: Partial<Record<string, string>> }): number {
   return Object.values(st.equipped ?? {}).filter(Boolean).length;
+}
+
+function getEquippedItem(save: GameSave, charId: string, slot: EquipSlot) {
+  const uid = save.chars[charId]?.equipped?.[slot];
+  if (!uid) return null;
+  return save.bag.find(b => b.uid === uid) ?? null;
+}
+
+/** 18층 — 무기·방어구 모두 15세대(u5) 이상 착용 */
+export function meetsFloor18EquipRequirement(save: GameSave, charId: string): boolean {
+  const weapon = getEquippedItem(save, charId, 'weapon');
+  const armor = getEquippedItem(save, charId, 'armor');
+  if (!weapon || !armor) return false;
+  return gradeIndex(normalizeGrade(weapon.grade)) >= FLOOR_18_MIN_EQUIP_TIER
+    && gradeIndex(normalizeGrade(armor.grade)) >= FLOOR_18_MIN_EQUIP_TIER;
+}
+
+export function formatFloor18EquipLabel(): string {
+  const grade = GRADE_ORDER[FLOOR_18_MIN_EQUIP_TIER] ?? 'u5';
+  const label = GRADE_LABEL[grade]?.split(' · ')[0] ?? 'u5';
+  return `${label} 무기·방어구`;
 }
 
 /**
@@ -123,6 +148,13 @@ export function assessPartyReadiness(save: GameSave, regionId: number): PartyRea
       score -= 35;
       issues.push('18층: 4인 4차 전직 완료 필수');
     }
+    for (const id of party) {
+      const name = CHAR_MAP[id]?.name ?? id;
+      if (!meetsFloor18EquipRequirement(save, id)) {
+        score -= 28;
+        issues.push(`${name} ${formatFloor18EquipLabel()}`);
+      }
+    }
   }
 
   score = Math.max(0, Math.min(100, score));
@@ -133,6 +165,7 @@ export function assessPartyReadiness(save: GameSave, regionId: number): PartyRea
   let monsterMult = regionId === 10 ? 0.98 : 1.0 + lateTier * 0.028;
   if (regionId >= 13) monsterMult += (regionId - 12) * 0.028;
   if (regionId >= 14) monsterMult *= 1 + (regionId - 13) * 0.062;
+  if (regionId >= 16) monsterMult *= 1.08 + (regionId - 15) * 0.06;
   if (regionId >= 17) monsterMult *= 1.18;
   let playerAtkMult = 1;
 
@@ -147,14 +180,17 @@ export function assessPartyReadiness(save: GameSave, regionId: number): PartyRea
       playerAtkMult *= 0.95;
     }
   } else if (regionId === 18) {
-    const allP4 = party.every(id => (save.chars[id]?.prestige ?? 0) >= 3);
+    const allP4 = party.length >= MIN_PARTY_SIZE_LATE
+      && party.every(id => (save.chars[id]?.prestige ?? 0) >= 3);
+    const allEquip = party.length >= MIN_PARTY_SIZE_LATE
+      && party.every(id => meetsFloor18EquipRequirement(save, id));
     const fullRoles = hasTank && hasDps && hasHealer;
-    if (allP4 && fullRoles && ready) {
-      monsterMult *= 0.86;
-      playerAtkMult *= 1.1;
-    } else if (!allP4 || !fullRoles) {
-      monsterMult *= 2.95;
-      playerAtkMult *= 0.72;
+    if (allP4 && allEquip && fullRoles && ready) {
+      monsterMult *= 0.82;
+      playerAtkMult *= 1.12;
+    } else if (!allP4 || !allEquip || !fullRoles) {
+      monsterMult *= 3.35;
+      playerAtkMult *= 0.68;
     }
   } else if (ready) {
     monsterMult *= regionId <= 11 ? 0.90 : regionId <= 14 ? 0.96 : 1.0;

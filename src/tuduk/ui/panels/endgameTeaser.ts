@@ -1,6 +1,6 @@
 import type { GameSave } from '../../types';
 import {
-  getEndgameLockHint, getEndgameTeaserLore, getEndgameTeaserProgress, isEndgameUnlocked,
+  getEndgameLockHint, getEndgameTeaserProgress, isEndgameUnlocked,
 } from '../../systems/EndgameSystem';
 import { isSpireTestBypass } from '../../data/endgame/spireTest';
 
@@ -27,9 +27,9 @@ export function renderEndgameHubButton(save: GameSave): string {
   const teaser = getEndgameTeaserProgress(save);
   if (!teaser) return '';
 
-  const lore = getEndgameTeaserLore(save);
+  const subtitle = teaser.hint;
   return `<button type="button" class="town-hub-mini town-hub-mini--endgame town-hub-mini--locked" data-town-sub="endgame" title="${teaser.hint}">
-    ${endgameMiniBody('야탑의 문', lore)}
+    ${endgameMiniBody('야탑의 문', subtitle)}
     <span class="town-hub-mini-pct">${teaser.progressPct}%</span>
   </button>`;
 }

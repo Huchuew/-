@@ -8,6 +8,7 @@ import {
 import { audio } from '../../core/AudioManager';
 import { refreshBgm } from '../../core/bgmContext';
 import { APP_VERSION, STUDIO_NAME } from '../../config/release';
+import { applyHardReload, checkForAppUpdate, fetchDeployedVersion } from '../../core/appUpdate';
 import { openPrivacyPolicy } from '../../utils/openPrivacy';
 import { showConfirmModal } from '../confirmModal';
 import { bindTap } from '../../utils/bindTap';
@@ -83,6 +84,7 @@ export function renderSettingsPanel(host: PanelHost, save: GameSave, prefix = ''
     </div>
     <button type="button" class="btn-sm danger" id="reset-save">진행 초기화</button>
     <button type="button" class="btn-sm link-btn privacy-link" id="open-privacy">개인정보처리방침</button>
+    <button type="button" class="btn-sm link-btn" id="check-app-update">최신 버전 확인</button>
     <p class="hint settings-version">v${APP_VERSION} · ${STUDIO_NAME}</p>`;
 
   const bgmSlider = host.panelEl.querySelector('#bgm-volume') as HTMLInputElement | null;
@@ -216,6 +218,21 @@ export function renderSettingsPanel(host: PanelHost, save: GameSave, prefix = ''
     });
   });
   bindTap(host.panelEl.querySelector('#open-privacy'), () => openPrivacyPolicy());
+  bindTap(host.panelEl.querySelector('#check-app-update'), () => {
+    void (async () => {
+      const remote = await fetchDeployedVersion();
+      if (!remote) {
+        host.showToast('버전 확인 실패 — 네트워크를 확인하세요', false);
+        return;
+      }
+      if (remote === APP_VERSION) {
+        host.showToast(`최신 버전입니다 (v${APP_VERSION})`, true);
+        return;
+      }
+      host.showToast(`새 버전 v${remote} — 업데이트 중…`, true);
+      await applyHardReload();
+    })();
+  });
   bindTap(host.panelEl.querySelector('#reset-save'), () => {
     const root = document.getElementById('game-container') ?? document.body;
     showConfirmModal(root, {

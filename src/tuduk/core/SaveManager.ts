@@ -18,7 +18,8 @@ import { scheduleProfileSync } from '../services/PlayerProfileService';
 import { PRESTIGE_BRANCH_DEFS } from '../data/prestigeBranchData';
 import { normalizeBagItemSlots, sanitizeEquipment } from '../systems/EquipmentSystem';
 import { COMBAT_HP_SCALE } from '../data/combatBalance';
-import { ensureEndgame } from '../systems/EndgameSystem';
+import { MAX_DUNGEON_FLOOR } from '../data/regions';
+import { ensureEndgame, hasClearedEndgameDungeonBoss } from '../systems/EndgameSystem';
 import { ensureCamp } from '../systems/TycoonSystem';
 import { ensureLocation } from '../systems/LodgingSystem';
 import { ensureBulletin } from '../systems/BulletinBoardSystem';
@@ -180,7 +181,13 @@ export function reconcileSave(save: GameSave): GameSave {
   const badgeMax = (save.badges?.length ?? 0) > 0
     ? Math.max(...save.badges.map(b => b + 1))
     : 1;
-  save.maxRegion = Math.max(save.maxRegion ?? 1, save.currentRegion ?? 1, badgeMax);
+  const endgameCap = hasClearedEndgameDungeonBoss(save) ? MAX_DUNGEON_FLOOR + 1 : MAX_DUNGEON_FLOOR;
+  const cappedBadgeMax = Math.min(badgeMax, endgameCap);
+  save.maxRegion = Math.max(save.maxRegion ?? 1, save.currentRegion ?? 1, cappedBadgeMax);
+  save.maxRegion = Math.min(save.maxRegion, endgameCap);
+  if ((save.currentRegion ?? 1) > MAX_DUNGEON_FLOOR) {
+    save.currentRegion = MAX_DUNGEON_FLOOR;
+  }
   if (save.currentRegion > save.maxRegion) save.currentRegion = save.maxRegion;
   if (!save.party?.length) {
     const fallback = save.owned?.find(id => !isSupportChar(id)) ?? save.owned?.[0];

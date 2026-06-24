@@ -1,4 +1,7 @@
 import { bootTudukRPG } from './tuduk';
+import { initAppUpdate } from './tuduk/core/appUpdate';
+
+initAppUpdate();
 
 function showFatalError(msg: string) {
   const el = document.getElementById('game-container');

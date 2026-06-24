@@ -2570,16 +2570,8 @@ export class AdventureSystem {
         } else if (bossMon.regionId === 18) {
           this.addEvent(0.5, 0.18, '🌹 모란 보스 재격파!', '#ffaa88', 2);
         }
-        const nextRegion = bossMon.regionId + 1;
-        if (nextRegion <= REGIONS.length) {
-          this.save.maxRegion = Math.max(this.save.maxRegion ?? 1, nextRegion);
-          const nextReg = REGIONS.find(r => r.id === nextRegion);
-          if (!this.isReturningToLodging && !this.pendingReturnToLodging && !this.save.settings.holdFloorAdvance) {
-            this.pendingTravelRegion = nextRegion;
-            this.addEvent(0.5, 0.2, `📍 ${nextReg?.name}로 이동 준비`, '#88ccff', 2);
-          } else if (!this.isReturningToLodging) {
-            this.addEvent(0.5, 0.2, `📍 ${nextReg?.name} — 층 이동 멈춤 중`, '#ffcc88', 2);
-          }
+        if (bossMon.regionId === 18) {
+          this.save.maxRegion = Math.max(this.save.maxRegion ?? 1, 19);
         }
       } else {
         const nextRegion = bossMon.regionId + 1;

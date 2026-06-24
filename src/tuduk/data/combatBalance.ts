@@ -103,7 +103,7 @@ export function scaleKillExp(base: number, opts: KillRewardOpts = {}): number {
  * 1~18층 점진적 난이도 — 초반·중반 체감 대폭 상향 (1~10층 별도 가산)
  */
 export const LATE_GAME_FLOOR = 10;
-const MAX_FLOOR = 50;
+const MAX_FLOOR = 18;
 
 function floorT(regionId: number): number {
   const r = Math.max(1, Math.min(MAX_FLOOR, regionId));
@@ -140,7 +140,7 @@ function floorTutorialMult(regionId: number): number {
 export const GLOBAL_FLOOR_MONSTER_MULT = 1.12;
 
 const MID_GAME_FLOOR_START = 5;
-const MID_GAME_FLOOR_END = 19;
+const MID_GAME_FLOOR_END = 18;
 
 /**
  * 5~19층 추가 난이도 — 체력 3배+(고층 가속), 공·방 소폭 상향
@@ -162,7 +162,19 @@ function midGameFloorMult(regionId: number): { hp: number; atk: number; def: num
 export function regionBossHpMult(regionId: number): number {
   if (regionId < MID_GAME_FLOOR_START || regionId > MID_GAME_FLOOR_END) return 1;
   const t = (regionId - MID_GAME_FLOOR_START) / (MID_GAME_FLOOR_END - MID_GAME_FLOOR_START);
-  return 1.4 + t * 0.75;
+  let mult = 1.4 + t * 0.75;
+  if (regionId >= 16) mult *= 1 + (regionId - 15) * 0.08;
+  return mult;
+}
+
+function lateDungeonFloorMult(regionId: number): { hp: number; atk: number; def: number } {
+  if (regionId < 16) return { hp: 1, atk: 1, def: 1 };
+  const t = (regionId - 16) / 2;
+  return {
+    hp: 1.24 + t * 0.32,
+    atk: 1.1 + t * 0.16,
+    def: 1.08 + t * 0.14,
+  };
 }
 
 export function regionMonsterHpScale(regionId: number): number {
@@ -174,7 +186,8 @@ export function regionMonsterHpScale(regionId: number): number {
   if (regionId >= 19) scale *= 1 + (regionId - 18) * 0.022;
   if (regionId >= 35) scale *= 1.12;
   const mid = midGameFloorMult(regionId);
-  return scale * GLOBAL_FLOOR_MONSTER_MULT * mid.hp;
+  const late = lateDungeonFloorMult(regionId);
+  return scale * GLOBAL_FLOOR_MONSTER_MULT * mid.hp * late.hp;
 }
 
 export function regionMonsterAtkScale(regionId: number): number {
@@ -188,14 +201,16 @@ export function regionMonsterAtkScale(regionId: number): number {
   if (regionId >= 19) scale *= 1 + (regionId - 18) * 0.018;
   if (regionId >= 35) scale *= 1.1;
   const mid = midGameFloorMult(regionId);
-  return scale * GLOBAL_FLOOR_MONSTER_MULT * mid.atk;
+  const late = lateDungeonFloorMult(regionId);
+  return scale * GLOBAL_FLOOR_MONSTER_MULT * mid.atk * late.atk;
 }
 
 /** 몬스터 방어 — 고층에서 딜러 성장 없으면 딜이 안 박힘 */
 export function regionMonsterDefScale(regionId: number): number {
   const base = floorExpScale(regionId, 1.15, 3.75, 1.22);
   const mid = midGameFloorMult(regionId);
-  return base * earlyFloorBoost(regionId, 1.28) * floorTutorialMult(regionId) * GLOBAL_FLOOR_MONSTER_MULT * mid.def;
+  const late = lateDungeonFloorMult(regionId);
+  return base * earlyFloorBoost(regionId, 1.28) * floorTutorialMult(regionId) * GLOBAL_FLOOR_MONSTER_MULT * mid.def * late.def;
 }
 
 /** 고층 잡몹 공격 속도 — 6층부터 서서히 가속 */
