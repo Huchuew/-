@@ -1,5 +1,6 @@
 import type { GameSave } from '../types';
 import { getSpireWeekId, getSpireRewards, SPIRE_RELIC_MILESTONES, SPIRE_DAILY_ATTEMPTS } from '../data/endgame/spire';
+import { formatSpireBasementFloor, formatSpireBasementLabel, formatSpireBasementWithWave } from '../data/endgame/spireDepth';
 import {
   isSpireBossFloor,
   planSpireWave,
@@ -126,8 +127,10 @@ export function getSpireLocationLabel(save: GameSave): string {
   if (!run?.active) return '🗼 야탑';
   const req = spireWavesRequired(run.floor);
   const wave = Math.min(run.wavesThisFloor + 1, req);
-  return `🗼 야탑 ${run.floor}층 · ${wave}/${req}웨이브`;
+  return formatSpireBasementWithWave(run.floor, wave, req);
 }
+
+export { formatSpireBasementFloor, formatSpireBasementLabel };
 
 export type SpireWaveResult = 'continue' | 'floor_cleared';
 

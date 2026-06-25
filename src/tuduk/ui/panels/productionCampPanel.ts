@@ -7,7 +7,8 @@ import {
 import { MATERIAL_LABELS } from '../../data/equipment';
 import {
   canUpgradeBuilding, formatBuildingStatus, getBuildingProgress,
-  isBuildingPausedForMaterials,
+  isBuildingPausedByUser, isBuildingPausedForMaterials, isBuildingOperationPaused,
+  toggleBuildingPause,
 } from '../../systems/TycoonSystem';
 import {
   ensureTycoon,
@@ -22,7 +23,7 @@ const PROD_CHAIN = [...CAMP_PRODUCTION_BUILDINGS]
 function countReadyProduction(save: GameSave): number {
   return CAMP_PRODUCTION_BUILDINGS.filter(b => {
     const p = getBuildingProgress(save, b.id);
-    return p.level > 0 && p.ready && !isBuildingPausedForMaterials(save, b.id);
+    return p.level > 0 && p.ready && !isBuildingOperationPaused(save, b.id);
   }).length;
 }
 
@@ -73,7 +74,9 @@ function renderProductionCard(save: GameSave, def: CampBuildingDef, maxRegion: n
   const unlocked = isBuildingUnlocked(save, def.id);
   const prog = getBuildingProgress(save, def.id);
   const canUp = canUpgradeBuilding(save, def.id);
-  const paused = isBuildingPausedForMaterials(save, def.id);
+  const materialPaused = isBuildingPausedForMaterials(save, def.id);
+  const userPaused = isBuildingPausedByUser(save, def.id);
+  const paused = materialPaused || userPaused;
   const pct = Math.round(prog.progress * 100);
   const built = prog.level > 0;
   const outputAmt = built ? getBuildingOutputAmount(def, prog.level) : 0;
@@ -96,11 +99,11 @@ function renderProductionCard(save: GameSave, def: CampBuildingDef, maxRegion: n
   const gauge = built ? `
     <div class="prod-camp-gauge ${prog.ready && !paused ? 'ready' : ''} ${paused ? 'paused' : ''}">
       <div class="prod-camp-gauge-fill" style="width:${paused ? 100 : pct}%"></div>
-      <span class="prod-camp-gauge-pct">${paused ? '⏸ 재료 부족' : prog.ready ? '✨ 생산!' : `${pct}%`}</span>
+      <span class="prod-camp-gauge-pct">${materialPaused ? '⏸ 재료 부족' : userPaused ? '⏸ 정지' : prog.ready ? '✨ 생산!' : `${pct}%`}</span>
     </div>
     <p class="hint prod-camp-timer">
       ${paused
-    ? `필요: ${consumeHint}`
+    ? (materialPaused ? `필요: ${consumeHint}` : '유저 정지 — 재개 시 이어서 진행')
     : prog.ready
       ? `지금 ${outputLabel} 생산 중`
       : `${formatIntervalSec(prog.remainingMs)} 후 · ${outputLabel}`}
@@ -117,6 +120,7 @@ function renderProductionCard(save: GameSave, def: CampBuildingDef, maxRegion: n
     ${built ? `<p class="prod-camp-output">${outputLabel} / ${formatInterval(prog.intervalMs)}${consumeHint ? ` · 소모 ${consumeHint}` : ''}</p>` : ''}
     ${gauge}
     <footer class="prod-camp-card-foot">
+      ${built ? `<button type="button" class="btn-sm camp-pause-btn ${userPaused ? 'is-paused' : ''}" data-camp-pause="${def.id}">${userPaused ? '▶ 재개' : '⏸ 정지'}</button>` : ''}
       <button type="button" class="btn-sm gold" data-camp-upgrade="${def.id}" ${canUp.ok ? '' : 'disabled'}>
         ${built ? '업그레이드' : '건설'} 🪙${canUp.cost.toLocaleString()}
       </button>

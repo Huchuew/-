@@ -5,6 +5,7 @@ import { RELIC_MAP, RELICS } from '../data/endgame/relics';
 import { getSpireWeekId, SPIRE_DAILY_ATTEMPTS } from '../data/endgame/spire';
 import { CHARACTERS } from '../data/characters';
 import { getFloorClearCount } from './DungeonShortcutSystem';
+import { formatSpireBasementFloor } from '../data/endgame/spireDepth';
 
 export const ENDGAME_TEASER_MIN_FLOOR = 15;
 /** 야탑 해금 — 18층 보스 격파 (클리어 후 maxRegion 19) */
@@ -62,12 +63,12 @@ export function getEndgameLockHint(save: GameSave): string {
 export function getEndgameTeaserLore(save: GameSave): string {
   const maxR = save.maxRegion ?? 1;
   if (maxR >= 17) {
-    return '모란 너머, 하늘을 찢고 솟은 「무한의 야탑」. 18층을 정복하면 문이 열립니다.';
+    return '모란 너머 검은 탑 — 문을 열면 위가 아니라 아래로 이어진다. 지하 B1부터 심연이 시작됩니다.';
   }
   if (maxR >= 16) {
-    return '옥정 정상에서 보이는 검은 탑. 「야탑」이라 불리는 무한 던전의 실루엣.';
+    return '옥정 정상의 검은 탑. 바람이 위가 아니라 아래에서 올라옵니다.';
   }
-  return '평내호평 복도 끝, 중력이 거꾸로 느껴지는 구간. 누군가 「위로 올라가야 한다」고 속삭입니다.';
+  return '평내호평 복도 끝, 중력이 거꾸로 느껴지는 구간. 누군가 「아래로 내려가야 한다」고 속삭입니다.';
 }
 
 export interface EndgameTeaserProgress {
@@ -164,7 +165,7 @@ export function getAscensionMult(save: GameSave, charId: string): number {
 export function getEndgameProgressSummary(save: GameSave): string {
   ensureEndgame(save);
   const eg = save.endgame!;
-  return `야탑 ${eg.spireBest}층 · 유물 ${eg.relics.length}/${RELICS.filter(r => !r.id.includes('rift')).length} · 각성 ${eg.ascended.length}`;
+  return `야탑 ${formatSpireBasementFloor(eg.spireBest)} · 유물 ${eg.relics.length}/${RELICS.filter(r => !r.id.includes('rift')).length} · 각성 ${eg.ascended.length}`;
 }
 
 export function getEndgameGoldMult(save: GameSave): number {

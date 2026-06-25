@@ -7,6 +7,7 @@ import { BattleRenderer } from './BattleRenderer';
 import { applyCanvasPixelArtStyle } from './SpriteLoader';
 import { getBattleSceneLayout } from './battleSceneLayout';
 import { StageBackgroundRenderer, invalidateStageBackgroundCache } from './StageBackgroundRenderer';
+import { formatSpireBasementFloor, formatSpireBasementLabel, getSpireDepthProfile } from '../data/endgame/spireDepth';
 import { drawSpireTowerScene, preloadSpireTowerAssets } from './SpireTowerRenderer';
 import { drawRivalDuelBackground } from './RivalDuelBackground';
 import { LodgingRenderer } from './LodgingRenderer';
@@ -216,7 +217,7 @@ export class AdventureRenderer {
       ctx.font = `bold ${Math.max(10, h * 0.04)}px Outfit, sans-serif`;
       const runDots = '.'.repeat(1 + Math.floor(this.animTime * 4) % 3);
       const walkLabel = adv.isInSpireRun()
-        ? `야탑 등반 중${runDots}`
+        ? `${formatSpireBasementLabel(adv.save.spireRun?.floor ?? 1, false)} 하강 중${runDots}`
         : `달리는 중${runDots}`;
       ctx.fillText(walkLabel, w / 2, hudH + 28);
     }
@@ -335,7 +336,14 @@ export class AdventureRenderer {
       ? `${getExpeditionPotions(adv.save)}/${EXPEDITION_POTION_CARRY}`
       : '';
     const codexPct = Math.floor(adv.getCodexPercent(adv.save.currentRegion) * 100);
-    const bossHint = adv.isInSpireRun() ? ''
+    const bossHint = adv.isInSpireRun()
+      ? (() => {
+        const floor = adv.save.spireRun?.floor ?? 1;
+        const depth = getSpireDepthProfile(floor);
+        if (depth.touchOnly) return '👆 투닥만';
+        if (depth.uiFade > 0.35) return depth.label;
+        return '';
+      })()
       : adv.isInExpedition() && !isBossGateReady(adv.save, adv.save.currentRegion, adv.getCodexPercent(adv.save.currentRegion))
         ? `보스게이트 ${codexPct}%`
         : '';
@@ -493,7 +501,7 @@ export class AdventureRenderer {
       ctx.textAlign = 'center';
       ctx.font = `bold ${titleSize}px Outfit, sans-serif`;
       ctx.fillStyle = '#e8ddff';
-      ctx.fillText(`🗼 야탑 ${floor}층  →  🏠 마을`, cx, py + 22);
+      ctx.fillText(`${formatSpireBasementLabel(floor)}  →  🏠 마을`, cx, py + 22);
       ctx.font = `${subSize}px Outfit, sans-serif`;
       ctx.fillStyle = '#bbaadd';
       ctx.fillText(`귀환 중… ${remain}초`, cx, py + 40);

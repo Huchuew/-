@@ -62,6 +62,7 @@ export interface CampState {
   legend_forgeLastTick: number;
   void_cauldronLevel: number;
   void_cauldronLastTick: number;
+  pausedAt?: Partial<Record<string, number>>;
 }
 
 const TICK_CHECK_MS = 800;
@@ -135,6 +136,43 @@ export function ensureCamp(save: GameSave) {
   if (c.legend_forgeLastTick == null) c.legend_forgeLastTick = Date.now();
   if (c.void_cauldronLevel == null) c.void_cauldronLevel = 0;
   if (c.void_cauldronLastTick == null) c.void_cauldronLastTick = Date.now();
+  if (c.pausedAt == null) c.pausedAt = {};
+}
+
+export function isBuildingPausedByUser(save: GameSave, id: CampBuildingId): boolean {
+  ensureCamp(save);
+  return save.camp!.pausedAt?.[id] != null;
+}
+
+/** 재료 부족 또는 유저 정지 */
+export function isBuildingOperationPaused(save: GameSave, id: CampBuildingId): boolean {
+  return isBuildingPausedByUser(save, id) || isBuildingPausedForMaterials(save, id);
+}
+
+export function toggleBuildingPause(save: GameSave, id: CampBuildingId): boolean {
+  const def = CAMP_BUILDING_MAP[id];
+  if (!defHasCycle(def) || getBuildingLevel(save, id) <= 0) return false;
+  ensureCamp(save);
+  const camp = save.camp!;
+  if (!camp.pausedAt) camp.pausedAt = {};
+
+  if (camp.pausedAt[id] != null) {
+    const pausedMs = Date.now() - camp.pausedAt[id]!;
+    setCampLastTick(camp, id, (camp[getTickKey(id) as keyof typeof camp] as number) + pausedMs);
+    delete camp.pausedAt[id];
+    saveGame(save);
+    return false;
+  }
+
+  camp.pausedAt[id] = Date.now();
+  saveGame(save);
+  return true;
+}
+
+function getBuildingElapsedMs(save: GameSave, id: CampBuildingId, lastTick: number): number {
+  const pausedAt = save.camp?.pausedAt?.[id];
+  const now = pausedAt ?? Date.now();
+  return Math.min(now - lastTick, MAX_OFFLINE_MS);
 }
 
 export function getClinicLevel(save: GameSave): number {
@@ -148,6 +186,10 @@ function getLevelKey(id: CampBuildingId): keyof CampState {
 
 function getTickKey(id: CampBuildingId): keyof CampState {
   return `${id}LastTick` as keyof CampState;
+}
+
+function setCampLastTick(camp: NonNullable<GameSave['camp']>, id: CampBuildingId, value: number) {
+  (camp[getTickKey(id) as keyof NonNullable<GameSave['camp']>] as number) = value;
 }
 
 export function getBuildingProgress(save: GameSave, id: CampBuildingId): {
@@ -168,7 +210,7 @@ export function getBuildingProgress(save: GameSave, id: CampBuildingId): {
   const intervalMs = Math.max(def.minIntervalMs ?? 60_000, Math.floor(baseInterval / speedMult));
   const camp = save.camp!;
   const lastTick = camp[getTickKey(id)] as number;
-  const elapsed = Date.now() - lastTick;
+  const elapsed = getBuildingElapsedMs(save, id, lastTick);
   const progress = Math.min(1, elapsed / intervalMs);
   const ready = elapsed >= intervalMs;
   const remainingMs = ready ? 0 : Math.max(0, intervalMs - elapsed);
@@ -280,9 +322,10 @@ function tickDungeonPrepCycles(save: GameSave, produced: Record<string, number>)
     produced[id] = produced[id] ?? 0;
     const level = getBuildingLevel(save, id);
     if (level <= 0) continue;
+    if (isBuildingPausedByUser(save, id)) continue;
     const tickKey = getTickKey(id);
     let lastTick = camp[tickKey] as number;
-    const elapsed = Math.min(Date.now() - lastTick, MAX_OFFLINE_MS);
+    const elapsed = getBuildingElapsedMs(save, id, lastTick);
     const baseInterval = getBuildingIntervalMs(def, level);
     const speedMult = getProductionSpeedMult(save, id);
     const interval = Math.max(def.minIntervalMs ?? 60_000, Math.floor(baseInterval / speedMult));
@@ -297,7 +340,7 @@ function tickDungeonPrepCycles(save: GameSave, produced: Record<string, number>)
 
     if (completed > 0) {
       lastTick += completed * interval;
-      camp[tickKey] = lastTick;
+      setCampLastTick(camp, id, lastTick);
       produced[id] = completed;
       changed = true;
     }
@@ -319,9 +362,10 @@ export function tickCampProduction(save: GameSave): Record<string, number> {
     const level = getBuildingLevel(save, id);
     if (level <= 0) continue;
     if (def.produce === 'potion' && !canProduceLabPotions(save)) continue;
+    if (isBuildingPausedByUser(save, id)) continue;
     const tickKey = getTickKey(id);
     let lastTick = camp[tickKey] as number;
-    const elapsed = Math.min(Date.now() - lastTick, MAX_OFFLINE_MS);
+    const elapsed = getBuildingElapsedMs(save, id, lastTick);
     const baseInterval = getBuildingIntervalMs(def, level);
     const speedMult = getProductionSpeedMult(save, id);
     const interval = Math.max(def.minIntervalMs ?? 60_000, Math.floor(baseInterval / speedMult));
@@ -339,7 +383,7 @@ export function tickCampProduction(save: GameSave): Record<string, number> {
 
     if (produced[id] > 0) {
       lastTick += produced[id]! * interval;
-      camp[tickKey] = lastTick;
+      setCampLastTick(camp, id, lastTick);
       changed = true;
     }
   }
@@ -400,6 +444,9 @@ export function formatBuildingStatus(save: GameSave, id: CampBuildingId): string
   }
   if (def.consume && !hasMaterials(save, def.consume)) {
     return `⏸ 재료부족으로 일시중단${consumeHint ? ` · 필요: ${consumeHint}` : ''}`;
+  }
+  if (isBuildingPausedByUser(save, id)) {
+    return '⏸ 정지됨 — 재개 버튼으로 다시 가동';
   }
   if (prog.ready) {
     const out = def.produce === 'potion' ? '포션' : MATERIAL_LABELS[def.produce ?? ''] ?? def.produce;

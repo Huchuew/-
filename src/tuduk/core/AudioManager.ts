@@ -12,7 +12,8 @@ import {
 } from '../data/rmmzSe';
 import { getBuffApplySe, getDebuffApplySe } from '../data/statusEffectAudio';
 
-import { type BgmResolveInput, resolveBgmSession } from '../data/rmmzBgm';
+import { type BgmResolveInput, type BgmSession, bgmSessionPriority, resolveBgmSession } from '../data/rmmzBgm';
+import { getSpireDepthProfile } from '../data/endgame/spireDepth';
 
 import {
   getPrestigeAttackSe, getPrestigeClaimSequencing, getPrestigeJobProfile, type PrestigeJobProfile,
@@ -42,6 +43,8 @@ export class AudioManager {
 
   private bgmVolumeMul = 0.82;
 
+  private sceneBgmMul = 1;
+
   private sfxVolumeMul = 0.58;
 
   private seLoaded = false;
@@ -49,6 +52,16 @@ export class AudioManager {
   private bgmLoaded = false;
 
   private activeBgmKey = '';
+
+  private pendingBgmSession: BgmSession | null = null;
+
+  private bgmSwitchTimer = 0;
+
+  private bgmHoldUntil = 0;
+
+  private static readonly BGM_SWITCH_DELAY_MS = 2200;
+
+  private static readonly BGM_MIN_HOLD_MS = 14000;
 
 
 
@@ -124,13 +137,15 @@ export class AudioManager {
 
     if (!on) {
 
+      this.clearBgmSwitchPending();
+
       this.activeBgmKey = '';
 
       bgmPlayer.stop();
 
     } else {
 
-      bgmPlayer.setVolumeMultiplier(this.bgmVolumeMul);
+      this.applyBgmOutputVolume();
 
     }
 
@@ -142,7 +157,31 @@ export class AudioManager {
 
     this.bgmVolumeMul = Math.max(0, Math.min(1, vol));
 
-    bgmPlayer.setVolumeMultiplier(this.bgmOn ? this.bgmVolumeMul : 0);
+    this.applyBgmOutputVolume();
+
+  }
+
+  private applyBgmOutputVolume() {
+
+    bgmPlayer.setVolumeMultiplier(this.bgmOn ? this.bgmVolumeMul * this.sceneBgmMul : 0);
+
+  }
+
+  private applySpireDepthBgm(floor: number | undefined, inSpire: boolean) {
+
+    if (!inSpire || !floor) {
+
+      this.sceneBgmMul = 1;
+
+      this.applyBgmOutputVolume();
+
+      return;
+
+    }
+
+    this.sceneBgmMul = getSpireDepthProfile(floor).bgmVolume;
+
+    this.applyBgmOutputVolume();
 
   }
 
@@ -172,21 +211,61 @@ export class AudioManager {
 
 
 
-  /** 상황에 맞는 BGM 전환 (같은 세션이면 유지 · 곡 끝나면 플레이리스트 다음 곡) */
+  /** 상황에 맞는 BGM 전환 — 세션 유지·우선순위·페이드 디바운스 */
 
   syncBgm(input: BgmResolveInput) {
 
     if (!this.bgmOn) return;
 
+    this.applySpireDepthBgm(input.spireFloor, !!input.isInSpireRun);
+
     const session = resolveBgmSession(input);
 
-    if (!session) return;
+    if (!session) {
 
-    if (session.key === this.activeBgmKey) return;
+      if (input.isInSpireRun && getSpireDepthProfile(input.spireFloor ?? 1).bgmVolume <= 0.04) {
 
-    this.activeBgmKey = session.key;
+        this.stopBGM();
 
-    bgmPlayer.playSession(session);
+      }
+
+      return;
+
+    }
+
+    if (session.key === this.activeBgmKey) {
+
+      this.clearBgmSwitchPending();
+
+      this.applyBgmOutputVolume();
+
+      return;
+
+    }
+
+    const nextPri = bgmSessionPriority(session.key);
+
+    const curPri = bgmSessionPriority(this.activeBgmKey);
+
+    if (!this.activeBgmKey || nextPri > curPri) {
+
+      this.applyBgmSession(session);
+
+      return;
+
+    }
+
+    if (nextPri < curPri) {
+
+      this.scheduleBgmSwitch(session, 900);
+
+      return;
+
+    }
+
+    if (Date.now() < this.bgmHoldUntil) return;
+
+    this.scheduleBgmSwitch(session, AudioManager.BGM_SWITCH_DELAY_MS);
 
   }
 
@@ -194,9 +273,65 @@ export class AudioManager {
 
   stopBGM() {
 
+    this.clearBgmSwitchPending();
+
     this.activeBgmKey = '';
 
     bgmPlayer.stop();
+
+  }
+
+
+
+  private clearBgmSwitchPending() {
+
+    this.pendingBgmSession = null;
+
+    if (this.bgmSwitchTimer) {
+
+      clearTimeout(this.bgmSwitchTimer);
+
+      this.bgmSwitchTimer = 0;
+
+    }
+
+  }
+
+
+
+  private scheduleBgmSwitch(session: BgmSession, delayMs: number) {
+
+    this.pendingBgmSession = session;
+
+    if (this.bgmSwitchTimer) clearTimeout(this.bgmSwitchTimer);
+
+    this.bgmSwitchTimer = window.setTimeout(() => {
+
+      this.bgmSwitchTimer = 0;
+
+      const pending = this.pendingBgmSession;
+
+      this.pendingBgmSession = null;
+
+      if (!pending || pending.key === this.activeBgmKey) return;
+
+      this.applyBgmSession(pending);
+
+    }, delayMs);
+
+  }
+
+
+
+  private applyBgmSession(session: BgmSession) {
+
+    this.clearBgmSwitchPending();
+
+    this.activeBgmKey = session.key;
+
+    this.bgmHoldUntil = Date.now() + AudioManager.BGM_MIN_HOLD_MS;
+
+    bgmPlayer.playSession(session);
 
   }
 

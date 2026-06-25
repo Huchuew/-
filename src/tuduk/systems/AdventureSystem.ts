@@ -54,6 +54,7 @@ import {
   serializeRivalRun,
 } from './RivalDuelCombat';
 import { preloadSpireTowerAssets } from '../render/SpireTowerRenderer';
+import { formatSpireBasementFloor, formatSpireBasementLabel, getSpireDepthProfile, isSpireTouchOnlyFloor } from '../data/endgame/spireDepth';
 import { getWeeklySpireModifier } from '../data/endgame/spire';
 import { checkBossPhase } from './bossPhases';
 import {
@@ -767,10 +768,14 @@ export class AdventureSystem {
     }
   }
 
-  /** 하단 스킬 바 — 던전 원정 중 항상 (이동·조우·전투·루트) */
+  /** 하단 스킬 바 — 던전 원정 중 (야탑 심연 B20+ 는 투닥만) */
   isCombatSkillBarActive(): boolean {
     if (!this.isInExpedition() || this.isAtLodging()) return false;
     if (this.phase === 'travel' || this.phase === 'defeat') return false;
+    if (this.isInSpireRun()) {
+      const floor = this.save.spireRun?.floor ?? 1;
+      if (isSpireTouchOnlyFloor(floor)) return false;
+    }
     return true;
   }
 
@@ -1098,7 +1103,7 @@ export class AdventureSystem {
   getCurrentLocationLabel(): string {
     if (this.isSpireReturnTrip) {
       const floor = this.save.spireRun?.floor ?? 1;
-      return `🗼 야탑 ${floor}층 → 🏠 마을`;
+      return `${formatSpireBasementLabel(floor)} → 🏠 마을`;
     }
     if (this.isInSpireRun()) return getSpireLocationLabel(this.save);
     if (this.isAtLodging()) return '🏠 모험숙소';
@@ -2267,7 +2272,7 @@ export class AdventureSystem {
       penaltyGold,
       stats: { ...this.runStats },
       regionName: this.isInSpireRun()
-        ? `야탑 ${this.save.spireRun?.floor ?? 1}층`
+        ? formatSpireBasementLabel(this.save.spireRun?.floor ?? 1, false)
         : this.region.name,
       affixName: this.currentAffix.name,
       affixTip: formatAffixTip(this.currentAffix),
@@ -2300,7 +2305,7 @@ export class AdventureSystem {
     this.waveStreak = 0;
     this.chainEngage = false;
     const wipeMsg = this.isInSpireRun()
-      ? '💀 야탑에서 패퇴 — 숙소로 귀환합니다'
+      ? `💀 ${formatSpireBasementLabel(this.save.spireRun?.floor ?? 1)}에서 패퇴 — 숙소로 귀환합니다`
       : '💀 전멸 — 숙소로 후퇴합니다';
     this.addEvent(0.5, 0.28, wipeMsg, '#ff6666', 2.5);
 
@@ -2599,11 +2604,15 @@ export class AdventureSystem {
         const mod = getWeeklySpireModifier(this.save.spireRun?.weekId ?? '');
         resetFloorSessionPacing(this.save, nextFloor);
         this.currentAffix = getRegionAffix(Math.min(18, this.save.currentRegion));
-        this.addEvent(0.5, 0.2, `🗼 야탑 ${cleared}층 돌파! [${mod.name}]`, '#ffdd88', 2.6);
+        this.addEvent(0.5, 0.2, `🗼 ${formatSpireBasementFloor(cleared)} 돌파! [${mod.name}]`, '#ffdd88', 2.6);
         if ([25, 30, 35, 40].includes(cleared)) {
           this.addEvent(0.5, 0.24, '💠 탑의 심핵 획득!', '#88eeff', 2.4);
         }
-        this.addEvent(0.5, 0.26, `⬆️ ${nextFloor}층으로 — 계속 등반!`, '#aaddff', 2);
+        const nextDepth = getSpireDepthProfile(nextFloor);
+        this.addEvent(0.5, 0.26, `⬇️ ${formatSpireBasementFloor(nextFloor)}으로 — 계속 하강`, '#aaddff', 2);
+        if (nextDepth.hint) {
+          this.addEvent(0.5, 0.3, nextDepth.hint, '#99aabb', 2.6);
+        }
       }
     }
 
@@ -2937,7 +2946,7 @@ export class AdventureSystem {
     this.save.defeatLog = undefined;
     if (showMessage && !this.isLodgingResting) {
       const arriveMsg = spireFloor > 0
-        ? `🏠 마을 도착 — 야탑 ${spireFloor}층까지 등반`
+        ? `🏠 마을 도착 — ${formatSpireBasementLabel(spireFloor)}까지 하강`
         : '🏠 숙소 도착 — HP 자동 회복 중';
       this.addEvent(0.5, 0.32, arriveMsg, spireFloor > 0 ? '#ccbbff' : '#aaddff', 2);
     }
@@ -3301,7 +3310,11 @@ export class AdventureSystem {
     void preloadSpireTowerAssets();
     const floor = this.save.spireRun!.floor;
     const mod = getWeeklySpireModifier(this.save.spireRun!.weekId);
-    this.addEvent(0.5, 0.3, `🗼 야탑 ${floor}층 등반 — [${mod.name}]`, '#ccbbff', 2.4);
+    const depth = getSpireDepthProfile(floor);
+    this.addEvent(0.5, 0.3, `🗼 ${formatSpireBasementLabel(floor)} 하강 — [${mod.name}]`, '#ccbbff', 2.4);
+    if (depth.hint && floor >= 8) {
+      this.addEvent(0.5, 0.38, depth.hint, '#99aabb', 2.8);
+    }
     this.addEvent(0.5, 0.36, '스크롤 전투 — 웨이브를 격파해 올라가세요!', '#aaddff', 2);
     saveGame(this.save);
     this.onSave?.();
@@ -3369,7 +3382,7 @@ export class AdventureSystem {
     this.setPhase('travel');
 
     if (!silent) {
-      this.addEvent(0.5, 0.28, `🗼 야탑 ${spireFloor}층에서 마을로 귀환`, '#ccbbff', 2.4);
+      this.addEvent(0.5, 0.28, `🗼 ${formatSpireBasementLabel(spireFloor)}에서 마을로 귀환`, '#ccbbff', 2.4);
     }
 
     saveGame(this.save);

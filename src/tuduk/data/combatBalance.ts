@@ -172,7 +172,7 @@ function lateDungeonFloorMult(regionId: number): { hp: number; atk: number; def:
   const t = (regionId - 16) / 2;
   return {
     hp: 1.24 + t * 0.32,
-    atk: 1.1 + t * 0.16,
+    atk: 1.05 + t * 0.10,
     def: 1.08 + t * 0.14,
   };
 }
@@ -197,7 +197,7 @@ export function regionMonsterAtkScale(regionId: number): number {
   if (regionId === 10) scale *= 0.92;
   if (regionId === 11) scale *= 0.96;
   if (regionId >= 12) scale *= 1 + (regionId - 11) * 0.024;
-  if (regionId >= 16) scale *= 1.06;
+  if (regionId >= 16) scale *= 1.02;
   if (regionId >= 19) scale *= 1 + (regionId - 18) * 0.018;
   if (regionId >= 35) scale *= 1.1;
   const mid = midGameFloorMult(regionId);

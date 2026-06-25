@@ -2,10 +2,10 @@ import type { BgmSession } from '../data/rmmzBgm';
 import type { RmmzBgmName } from '../data/rmmzBgm';
 import { bgmPath } from '../data/rmmzBgm';
 
-const FADE_STEPS = 22;
-const FADE_STEP_MS = 40;
+const FADE_STEPS = 40;
+const FADE_STEP_MS = 50;
 
-/** HTMLAudio BGM — 세션 단위 재생, 곡 종료 시 플레이리스트 다음 곡 크로스페이드 */
+/** HTMLAudio BGM — 세션 유지·루프·크로스페이드 전환 */
 export class BgmPlayer {
   private current: HTMLAudioElement | null = null;
   private outgoing: HTMLAudioElement | null = null;
@@ -16,8 +16,6 @@ export class BgmPlayer {
   private baseVolume = 0.058;
   private volumeMul = 1;
   private fadeTimer = 0;
-  private advanceTimer = 0;
-  private advancing = false;
 
   setEnabled(on: boolean) {
     this.enabled = on;
@@ -40,12 +38,20 @@ export class BgmPlayer {
     if (!this.enabled) return;
     if (session.key === this.sessionKey && this.current && !this.current.paused) return;
 
-    this.teardown();
+    const switching = !!this.sessionKey && this.sessionKey !== session.key && !!this.current;
     this.sessionKey = session.key;
     this.playlist = session.playlist.length ? [...session.playlist] : [];
     this.playlistIndex = Math.max(0, Math.min(session.startIndex, this.playlist.length - 1));
     if (!this.playlist.length) return;
-    this.startTrack(this.playlist[this.playlistIndex]!, false);
+
+    const track = this.playlist[this.playlistIndex]!;
+    if (switching) {
+      this.startTrack(track, true);
+      return;
+    }
+
+    this.hardStopOutgoing();
+    this.startTrack(track, false);
   }
 
   /** @deprecated — playSession 사용 */
@@ -78,18 +84,17 @@ export class BgmPlayer {
       clearInterval(this.fadeTimer);
       this.fadeTimer = 0;
     }
-    if (this.advanceTimer) {
-      clearTimeout(this.advanceTimer);
-      this.advanceTimer = 0;
-    }
+    this.hardStopOutgoing();
     this.detach(this.current);
-    this.detach(this.outgoing);
     this.current = null;
-    this.outgoing = null;
     this.sessionKey = '';
     this.playlist = [];
     this.playlistIndex = 0;
-    this.advancing = false;
+  }
+
+  private hardStopOutgoing() {
+    this.detach(this.outgoing);
+    this.outgoing = null;
   }
 
   private detach(audio: HTMLAudioElement | null) {
@@ -104,17 +109,15 @@ export class BgmPlayer {
     if (!this.enabled || !this.sessionKey) return;
 
     const next = new Audio(bgmPath(track));
-    next.loop = false;
+    next.loop = true;
     next.volume = crossfade ? 0 : this.baseVolume * this.volumeMul;
     next.preload = 'auto';
-    next.onended = () => this.advancePlaylist();
 
     const prev = crossfade ? this.current : null;
     if (prev) {
       this.outgoing = prev;
     } else {
-      this.detach(this.outgoing);
-      this.outgoing = null;
+      this.hardStopOutgoing();
     }
     this.current = next;
 
@@ -129,48 +132,43 @@ export class BgmPlayer {
     else next.addEventListener('canplaythrough', begin, { once: true });
 
     next.addEventListener('error', () => {
-      if (this.current === next) this.advancePlaylist();
+      if (this.current === next) this.tryFallbackTrack(track);
     }, { once: true });
 
     next.load();
   }
 
-  private advancePlaylist() {
-    if (!this.enabled || !this.sessionKey || this.advancing) return;
+  private tryFallbackTrack(failed: RmmzBgmName) {
     if (!this.playlist.length) return;
-    this.advancing = true;
-
-    const prev = this.current;
-    const sessionKey = this.sessionKey;
-    this.playlistIndex = (this.playlistIndex + 1) % this.playlist.length;
-    const track = this.playlist[this.playlistIndex]!;
-
-    this.advanceTimer = window.setTimeout(() => {
-      this.advanceTimer = 0;
-      this.advancing = false;
-      if (!this.enabled || !this.sessionKey || sessionKey !== this.sessionKey) return;
-      this.outgoing = prev;
-      this.startTrack(track, true);
-    }, 80);
+    const idx = this.playlist.indexOf(failed);
+    const nextIdx = (idx + 1) % this.playlist.length;
+    if (this.playlist[nextIdx] === failed) return;
+    this.playlistIndex = nextIdx;
+    this.startTrack(this.playlist[nextIdx]!, this.current != null);
   }
 
   private crossfade(next: HTMLAudioElement, prev: HTMLAudioElement) {
     if (this.fadeTimer) clearInterval(this.fadeTimer);
+    const target = this.baseVolume * this.volumeMul;
     let step = 0;
     this.fadeTimer = window.setInterval(() => {
       step++;
-      const t = Math.min(1, step / FADE_STEPS);
-      if (this.current === next) next.volume = this.baseVolume * this.volumeMul * t;
-      if (!prev.paused) prev.volume = this.baseVolume * this.volumeMul * (1 - t);
+      const t = easeInOut(Math.min(1, step / FADE_STEPS));
+      if (this.current === next) next.volume = target * t;
+      if (!prev.paused) prev.volume = target * (1 - t);
       if (step >= FADE_STEPS) {
         clearInterval(this.fadeTimer);
         this.fadeTimer = 0;
         this.detach(prev);
         if (this.outgoing === prev) this.outgoing = null;
-        if (this.current === next) next.volume = this.baseVolume * this.volumeMul;
+        if (this.current === next) next.volume = target;
       }
     }, FADE_STEP_MS);
   }
+}
+
+function easeInOut(t: number): number {
+  return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
 }
 
 export const bgmPlayer = new BgmPlayer();

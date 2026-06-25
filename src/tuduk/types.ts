@@ -598,6 +598,8 @@ export interface GameSave {
     legend_forgeLastTick?: number;
     void_cauldronLevel?: number;
     void_cauldronLastTick?: number;
+    /** 시설 id → 정지 시작 시각(ms). 있으면 유저가 수동 정지한 상태 */
+    pausedAt?: Partial<Record<string, number>>;
     /** v5.1 마이그레이션용 */
     lastTick?: number;
   };

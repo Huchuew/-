@@ -61,7 +61,8 @@ import {
 } from '../data/campBuildings';
 import {
   canUpgradeBuilding, formatBuildingStatus, getBuildingProgress, getCampSummary,
-  isBuildingPausedForMaterials, tickCampProduction, upgradeBuilding,
+  isBuildingPausedForMaterials, isBuildingPausedByUser, isBuildingOperationPaused,
+  tickCampProduction, toggleBuildingPause, upgradeBuilding,
 } from '../systems/TycoonSystem';
 import {
   canCraft, canEnhance, craftItem, dismantleItem, enhanceCost, enhanceItem, equipItem,
@@ -830,6 +831,21 @@ export class PanelManager implements PanelHost {
         return;
       }
 
+      const campPauseBtn = target.closest('[data-camp-pause]') as HTMLButtonElement | null;
+      if (campPauseBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        run(() => {
+          const s = this.getSave();
+          const id = campPauseBtn.dataset.campPause as CampBuildingId;
+          toggleBuildingPause(s, id);
+          audio.playTab();
+          this.onRefresh();
+          this.render();
+        });
+        return;
+      }
+
       const campUpBtn = target.closest('[data-camp-upgrade]') as HTMLButtonElement | null;
       if (campUpBtn && !campUpBtn.disabled) {
         e.preventDefault();
@@ -1290,7 +1306,6 @@ export class PanelManager implements PanelHost {
         this.hudSettingsOpen = false;
         if (this.townSub === 'leaderboard') clearLeaderboardPanelCache();
         this.townSub = sub;
-        refreshBgm();
         lastTapMs = now;
         this.panelScrollTop = 0;
         this.render();
@@ -1766,14 +1781,18 @@ export class PanelManager implements PanelHost {
         if (prog.level <= 0) continue;
         const card = this.panelEl.querySelector(`[data-camp-building="${id}"]`);
         if (!card) continue;
-        const paused = isBuildingPausedForMaterials(save, id);
+        const paused = isBuildingOperationPaused(save, id);
+        const userPaused = isBuildingPausedByUser(save, id);
+        const materialPaused = isBuildingPausedForMaterials(save, id);
         const pct = Math.round(prog.progress * 100);
         const fill = card.querySelector('.prod-camp-gauge-fill, .camp-gauge-fill') as HTMLElement | null;
         const pctEl = card.querySelector('.prod-camp-gauge-pct, .camp-gauge-pct');
         const timer = card.querySelector('.prod-camp-timer');
         const gauge = card.querySelector('.prod-camp-gauge, .camp-gauge-bar');
         if (fill) fill.style.width = `${paused ? 100 : pct}%`;
-        if (pctEl) pctEl.textContent = paused ? '⏸ 재료 부족' : prog.ready ? '✨ 생산!' : `${pct}%`;
+        if (pctEl) {
+          pctEl.textContent = materialPaused ? '⏸ 재료 부족' : userPaused ? '⏸ 정지' : prog.ready ? '✨ 생산!' : `${pct}%`;
+        }
         if (timer && !paused) {
           const out = getBuildingOutputAmount(building, prog.level);
           const outputLabel = formatCampProduceOutput(building.produce, out);
@@ -3145,6 +3164,8 @@ export class PanelManager implements PanelHost {
     const isDungeon = def.kind === 'dungeon';
     const isCycled = isProd || isDungeon;
     const materialPaused = isProd && isBuildingPausedForMaterials(save, def.id);
+    const userPaused = isCycled && isBuildingPausedByUser(save, def.id);
+    const operationPaused = materialPaused || userPaused;
     const pct = Math.round(prog.progress * 100);
     const matLabel = def.produce === 'potion'
       ? 'HP 포션'
@@ -3182,19 +3203,22 @@ export class PanelManager implements PanelHost {
       : '';
     const gaugeBlock = isCycled && prog.level > 0 ? `
         ${speedHint}${dungeonHint}
-        ${materialPaused ? '<p class="hint warn camp-paused">⏸ 재료부족 — 던전에서 재료를 모아오세요</p>' : ''}
+        ${operationPaused && !userPaused ? '<p class="hint warn camp-paused">⏸ 재료부족 — 던전에서 재료를 모아오세요</p>' : ''}
+        ${userPaused ? '<p class="hint warn camp-paused">⏸ 정지됨 — 재개하면 이어서 진행</p>' : ''}
         <div class="camp-gauge-wrap">
-          <div class="camp-gauge-bar ${prog.ready && !materialPaused ? 'ready' : ''} ${materialPaused ? 'paused' : ''} ${isDungeon ? 'dungeon-prep' : ''}">
+          <div class="camp-gauge-bar ${prog.ready && !operationPaused ? 'ready' : ''} ${operationPaused ? 'paused' : ''} ${isDungeon ? 'dungeon-prep' : ''}">
             <div class="camp-gauge-fill" style="width:${pct}%"></div>
-            <span class="camp-gauge-pct">${materialPaused ? '⏸' : prog.ready ? '✨ 완료!' : `${pct}%`}</span>
+            <span class="camp-gauge-pct">${materialPaused ? '⏸' : userPaused ? '⏸' : prog.ready ? '✨ 완료!' : `${pct}%`}</span>
           </div>
           <span class="camp-gauge-label">
-            ${materialPaused ? statusLine : prog.ready
+            ${operationPaused
+              ? (userPaused ? '정지 중' : statusLine)
+              : prog.ready
               ? (isDungeon ? (dungeonStacks >= dungeonMax ? '만충 — 출발 대기' : '충전 적립!') : '곧 생산!')
               : `${formatIntervalSec(prog.remainingMs)} 후 ${isDungeon ? '충전' : matLabel}`}
           </span>
         </div>
-        <p class="hint camp-produce">${materialPaused ? statusLine : isDungeon ? statusLine : `다음 생산까지 ${formatInterval(prog.remainingMs || prog.intervalMs)}`}</p>`
+        <p class="hint camp-produce">${operationPaused ? statusLine : isDungeon ? statusLine : `다음 생산까지 ${formatInterval(prog.remainingMs || prog.intervalMs)}`}</p>`
       : def.kind === 'buff' && prog.level > 0
         ? `<p class="hint camp-buff-active">${formatBuildingStatus(save, def.id)}</p>${warehouseHint}`
         : isCycled && prog.level <= 0
@@ -3210,9 +3234,12 @@ export class PanelManager implements PanelHost {
       </div>
       ${unlocked ? `
         ${gaugeBlock}
-        <button class="btn-sm gold" data-camp-upgrade="${def.id}" ${canUp.ok ? '' : 'disabled'}>
-          ${prog.level <= 0 ? '건설' : '업그레이드'} (🪙${canUp.cost.toLocaleString()})
-        </button>
+        <div class="camp-building-actions">
+          ${isCycled && prog.level > 0 ? `<button type="button" class="btn-sm camp-pause-btn ${userPaused ? 'is-paused' : ''}" data-camp-pause="${def.id}">${userPaused ? '▶ 재개' : '⏸ 정지'}</button>` : ''}
+          <button class="btn-sm gold" data-camp-upgrade="${def.id}" ${canUp.ok ? '' : 'disabled'}>
+            ${prog.level <= 0 ? '건설' : '업그레이드'} (🪙${canUp.cost.toLocaleString()})
+          </button>
+        </div>
         ${!canUp.ok && canUp.reason ? `<p class="hint warn">${canUp.reason}</p>` : ''}
       ` : `<p class="hint warn">🔒 ${def.unlockRegion}층 해금 필요 (현재 ${maxRegion}층)</p>`}
     </div>`;

@@ -4442,6 +4442,22 @@
 .camp-gauge-bar.paused { border-color: #ff664466; opacity: 0.85; }
 .camp-gauge-bar.paused .camp-gauge-fill { background: linear-gradient(90deg, #884444, #cc6666); }
 .camp-paused { font-weight: 600; text-align: center; margin: 6px 0 4px; }
+.camp-building-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+.camp-pause-btn {
+  border: 1px solid #6688aa66;
+  background: #1a2a3344;
+  color: #aaccee;
+}
+.camp-pause-btn.is-paused {
+  border-color: #44aa8866;
+  color: #9fdf9f;
+}
 .camp-gauge-fill {
   height: 100%; border-radius: 8px;
   background: linear-gradient(90deg, #338866, #66ddaa);

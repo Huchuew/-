@@ -64,7 +64,7 @@ function formatCompact(n: number): string {
 function statChips(e: LeaderboardEntry): string {
   const floor = resolveLeaderboardFloor(e);
   return `<span class="lb-stat lb-stat--floor ${floor.isSpire ? 'lb-stat--spire' : ''}" title="${floor.statTitle}">`
-    + `<b>${floor.displayFloor}</b><small>${floor.statLabel}</small></span>`
+    + `<b>${floor.isSpire ? floor.statLabel : floor.displayFloor}</b><small>${floor.isSpire ? '야탑' : floor.statLabel}</small></span>`
     + `<span class="lb-stat" title="누적 투닥 횟수"><b>${formatCompact(e.touchCount)}</b><small>투닥</small></span>`
     + `<span class="lb-stat" title="출전 파티 전투력 합계"><b>${formatCompact(e.partyDps)}</b><small>전투력</small></span>`
     + `<span class="lb-stat" title="누적 몬스터 처치"><b>${formatCompact(e.totalKills)}</b><small>처치</small></span>`;
@@ -157,7 +157,7 @@ function formatGrowthNews(e: LeaderboardEntry): { ago: string; text: string } {
   if (floor.isSpire) {
     return {
       ago,
-      text: `<strong>${escapeHtml(e.nickname)}</strong>님이 🗼 야탑 <em>${floor.displayFloor}층</em>까지 등반`,
+      text: `<strong>${escapeHtml(e.nickname)}</strong>님이 🗼 야탑 <em>${floor.statLabel}</em>까지 하강`,
     };
   }
   if (floor.displayFloor >= 10) {
@@ -194,7 +194,7 @@ function renderShowdownCard(save: GameSave, snap: LeaderboardSnapshot, tab: LbTa
       spireBest: rivalEntry?.spireBest ?? 0,
     });
     const floorLabel = rivalFloor.isSpire
-      ? `야탑 ${rivalFloor.displayFloor}층`
+      ? `야탑 ${rivalFloor.statLabel}`
       : `${r.maxRegion}층`;
     const duelBtn = rivalEntry ? renderDuelButton(save, rivalEntry) : '';
     return `<div class="lb-rival-row ${r.isShowdown ? 'lb-rival-row--showdown' : ''}">
@@ -251,7 +251,7 @@ function renderMyCard(
     : getOverallPokerTitle(rank ?? null);
   const myFloor = resolveLeaderboardFloor(me);
   const floorLabel = myFloor.isSpire
-    ? `${myFloor.displayFloor}층`
+    ? myFloor.statLabel
     : `${me.maxRegion}층`;
   return `<div class="lb-my-card">
     <div class="lb-my-head">

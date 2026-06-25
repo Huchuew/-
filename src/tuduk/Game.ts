@@ -466,6 +466,7 @@ export class TudakGame {
 
   private buildBgmContext() {
     const panel = this.panels.getBgmPanelState();
+    const inSpire = this.adv.isInSpireRun();
     return {
       atLodging: this.adv.isAtLodging(),
       phase: this.adv.phase,
@@ -476,6 +477,8 @@ export class TudakGame {
       isDefeatRest: this.adv.isDefeatRestActive(),
       worldSub: panel.worldSub,
       campSub: panel.campSub,
+      isInSpireRun: inSpire,
+      spireFloor: inSpire ? (this.save.spireRun?.floor ?? 1) : undefined,
     };
   }
 
@@ -811,7 +814,7 @@ export class TudakGame {
       this.lastLivePanelMs = now;
       if (!this.panels.refreshLiveWidgets()) this.panels.render();
     }
-    if (now - this.lastBgmSyncMs >= 700) {
+    if (now - this.lastBgmSyncMs >= 2800) {
       this.lastBgmSyncMs = now;
       refreshBgm();
     }

@@ -1,4 +1,5 @@
 import type { GameSave } from '../../types';
+import { formatSpireBasementFloor } from '../../data/endgame/spireDepth';
 import { CHAR_MAP } from '../../data/characters';
 import { RELICS } from '../../data/endgame/relics';
 import {
@@ -69,13 +70,15 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
     const can = canAttemptSpire(save);
     body = `
       <div class="endgame-card">
-        <h4>무한의 탑 · 야탑 · 최고 ${eg.spireBest}층</h4>
+        <h4>지하 야탑 · 최심층 ${formatSpireBasementFloor(eg.spireBest)}</h4>
+        <p class="hint">문 너머는 위가 아니라 아래. B1부터 심연으로 하강합니다.</p>
         <p class="hint">이번 주 [${mod.name}] ${mod.desc}</p>
-        <p class="hint">주간 최고 ${eg.spireWeekBest}층 · 오늘 도전 ${eg.spireAttempts}/${SPIRE_DAILY_ATTEMPTS}</p>
-        <p class="hint">${MATERIAL_LABELS.spire_essence} ${essenceN}개 · 25/30/35/40층 클리어 시 1개씩 · 주간 미션 전부 클리어 시 +1</p>
-        <p><strong>매 도전 1층부터</strong> · ${SPIRE_ATTEMPT_CHARGE_FLOOR}층+ 또는 기록 갱신 시 시도권 차감</p>
-        <p class="hint">현재 전투력 ${dps.toLocaleString()} · 스크롤 전투로 무한 등반</p>
-        <button class="btn-sm gold" id="spire-attempt" ${can.ok ? '' : 'disabled'}>야탑 도전 (1회)</button>
+        <p class="hint">주간 최심층 ${formatSpireBasementFloor(eg.spireWeekBest)} · 오늘 도전 ${eg.spireAttempts}/${SPIRE_DAILY_ATTEMPTS}</p>
+        <p class="hint">${MATERIAL_LABELS.spire_essence} ${essenceN}개 · B25/30/35/40 클리어 시 1개씩 · 주간 미션 전부 클리어 시 +1</p>
+        <p><strong>매 도전 B1부터</strong> · ${SPIRE_ATTEMPT_CHARGE_FLOOR}층+ 또는 기록 갱신 시 시도권 차감</p>
+        <p class="hint">B20+ 심연 — BGM 소거 · 스킬바 숨김 · 투닥만 남습니다</p>
+        <p class="hint">현재 전투력 ${dps.toLocaleString()} · 스크롤 전투로 무한 하강</p>
+        <button class="btn-sm gold" id="spire-attempt" ${can.ok ? '' : 'disabled'}>야탑 하강 (1회)</button>
         ${!can.ok ? `<p class="hint warn">${can.reason}</p>` : ''}
       </div>`;
   } else if (host.endgameSub === 'relics') {
@@ -119,7 +122,7 @@ export function renderEndgamePanel(host: PanelHost, save: GameSave, prefix = '')
       <div class="endgame-card">
         <h4>${def.name} 전설 각성</h4>
         <p class="hint">${getAscensionCostText()}</p>
-        <p class="hint">Lv.${st?.level ?? 0} · 4차전직 ${hasPrestigeComplete(st!, charId) ? '✅' : '❌'} · 야탑 ${eg.spireBest}층 · 심핵 ${essenceN}개</p>
+        <p class="hint">Lv.${st?.level ?? 0} · 4차전직 ${hasPrestigeComplete(st!, charId) ? '✅' : '❌'} · 야탑 ${formatSpireBasementFloor(eg.spireBest)} · 심핵 ${essenceN}개</p>
         ${ascended
           ? '<p class="endgame-done">✨ 각성 완료 — 전 스탯 +28%</p>'
           : `<button class="btn-sm gold" id="ascend-btn" ${can.ok ? '' : 'disabled'}>전설 각성</button>
