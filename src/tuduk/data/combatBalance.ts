@@ -52,7 +52,7 @@ export const HEAL_COOLDOWN_MS = 6_200;
 export const DEBUFF_DOT_DMG_MULT = 1.38;
 
 /** HP 포션 1회 회복량 — 전원 만피 아님, 쓰러진 대상 제외 */
-export const POTION_HEAL_FLAT = 10_000;
+export const POTION_HEAL_FLAT = 20_000;
 
 export interface KillRewardOpts {
   elite?: boolean;
@@ -197,6 +197,7 @@ export function regionMonsterAtkScale(regionId: number): number {
   if (regionId === 10) scale *= 0.92;
   if (regionId === 11) scale *= 0.96;
   if (regionId >= 12) scale *= 1 + (regionId - 11) * 0.024;
+  if (regionId === 15) scale *= 0.90;
   if (regionId >= 16) scale *= 1.02;
   if (regionId >= 19) scale *= 1 + (regionId - 18) * 0.018;
   if (regionId >= 35) scale *= 1.1;

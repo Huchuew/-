@@ -1,5 +1,5 @@
 /** Play Store / APK 표시 버전 */
-export const APP_VERSION = '2.2.9';
+export const APP_VERSION = '2.2.10';
 
 /** 제작 스튜디오 */
 export const STUDIO_NAME = '후추랩';

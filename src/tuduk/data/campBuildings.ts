@@ -61,7 +61,7 @@ export const CAMP_BUILDINGS: CampBuildingDef[] = [
   },
   {
     id: 'lab', name: '연구실', icon: '🔬', kind: 'production',
-    desc: '치유 약초·목재를 소모해 HP 포션(+10,000) 자동 제조 — 숙소에서만 지급, 원정 중 누적분은 귀환 시 일괄 수령',
+    desc: '치유 약초·목재를 소모해 HP 포션(+20,000) 자동 제조 — 숙소에서만 지급, 원정 중 누적분은 귀환 시 일괄 수령',
     unlockRegion: 9, baseIntervalMs: 36 * 60_000, minIntervalMs: 10 * 60_000,
     maxLevel: 12, baseCost: 7500, costMult: 3.0,
     produce: 'potion', produceAmount: 2,

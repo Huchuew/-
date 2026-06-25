@@ -567,7 +567,7 @@ export class TudakGame {
       : getPotionStock(this.save);
     if (costEl) costEl.textContent = `×${n}`;
     btn.title = this.adv.isInExpedition()
-      ? `HP 포션 — 생존자 +10,000 (휴대 ${n}/${EXPEDITION_POTION_CARRY})`
+      ? `HP 포션 — 생존자 +20,000 (휴대 ${n}/${EXPEDITION_POTION_CARRY})`
       : `숙소 창고 💊 ${n}/${MAX_POTION_STOCK} — 원정 시 최대 3개 지참`;
     btn.disabled = n <= 0 || this.adv.isAtLodging() || this.adv.isDefeatRestActive()
       || this.adv.isTraveling() || this.adv.isResting;
